@@ -1,145 +1,160 @@
 import React from 'react';
 import { ScriptRecord, AutomationJob, FavoriteTitle, GenerationState } from '../types';
-import { TrashIcon, LayoutSidebarLeftCollapseIcon, LayoutSidebarLeftExpandIcon, StarIcon, CheckIcon, RefreshIcon, StopIcon } from './Icons';
+import { TrashIcon, StarIcon, CheckIcon, RefreshIcon, StopIcon, ArchiveIcon, BookUpIcon, XIcon } from './Icons';
 
 interface LibrarySidebarProps {
     scripts: ScriptRecord[];
+    archivedScripts: ScriptRecord[];
     activeScriptId: string | null;
     onSelectScript: (id: string) => void;
     onDeleteScript: (id: string) => void;
-    queue: AutomationJob[];
-    onStartQueue: () => void;
+    onArchiveScript: (id: string, isArchived: boolean) => void;
+    onManageQueue: () => void;
     isAutomationRunning: boolean;
-    isCollapsed: boolean;
-    onToggleCollapse: () => void;
     favoriteTitles: FavoriteTitle[];
-    onSelectFavoriteTitle: (title: string) => void;
-    onDeleteFavoriteTitle: (title: string) => void;
+    onSelectFavoriteTitle: (title: string, plot: string) => void;
+    onDeleteFavoriteTitle: (id: string) => void;
+    showArchived: boolean;
+    setShowArchived: (show: boolean) => void;
+    isMobile: boolean;
+    onClose?: () => void;
 }
 
 const getStatusIcon = (status: GenerationState) => {
     switch (status) {
         case GenerationState.COMPLETED:
-            return <div title="Completed"><CheckIcon /></div>;
+            return <div title="Completed" className="text-green-400"><CheckIcon /></div>;
         case GenerationState.GENERATING_OUTLINE:
         case GenerationState.GENERATING_HOOK:
         case GenerationState.GENERATING_CHAPTERS:
-            return <div title="In Progress" className="animate-spin"><RefreshIcon /></div>;
+            return <div title="In Progress" className="animate-spin text-yellow-400"><RefreshIcon /></div>;
         case GenerationState.PAUSED:
         case GenerationState.ERROR:
-             return <div title="Stopped / Error"><StopIcon /></div>;
+             return <div title="Stopped / Error" className="text-error"><StopIcon /></div>;
         case GenerationState.AWAITING_HOOK_SELECTION:
         case GenerationState.AWAITING_OUTLINE_APPROVAL:
-             return <div title="In Progress"><RefreshIcon /></div>;
+             return <div title="Action Required" className="text-blue-400"><RefreshIcon /></div>;
         default:
-            return null;
+            return <div className="w-5 h-5"></div>; // Placeholder
     }
 };
 
-const LibrarySidebar: React.FC<LibrarySidebarProps> = ({ 
-    scripts, 
-    activeScriptId, 
-    onSelectScript, 
-    onDeleteScript,
-    queue,
-    onStartQueue,
-    isAutomationRunning,
-    isCollapsed,
-    onToggleCollapse,
-    favoriteTitles,
-    onSelectFavoriteTitle,
-    onDeleteFavoriteTitle
-}) => {
+const ScriptList: React.FC<{
+    title: string;
+    scripts: ScriptRecord[];
+    activeScriptId: string | null;
+    onSelectScript: (id: string) => void;
+    onDeleteScript: (id: string) => void;
+    onArchiveScript: (id: string, isArchived: boolean) => void;
+}> = ({ title, scripts, activeScriptId, onSelectScript, onDeleteScript, onArchiveScript }) => {
     
-    const handleDeleteScript = (e: React.MouseEvent, id: string) => {
+    const handleAction = (e: React.MouseEvent, action: () => void) => {
         e.stopPropagation();
-        if (window.confirm("Are you sure you want to delete this script?")) {
-            onDeleteScript(id);
-        }
-    };
+        action();
+    }
+
+    return (
+        <div>
+            <h2 className="text-lg font-bold text-primary mb-2 flex-shrink-0">{title}</h2>
+            {scripts.length > 0 ? (
+                <ul className="space-y-2">
+                    {scripts.map(script => (
+                        <li key={script.id}>
+                            <button
+                                onClick={() => onSelectScript(script.id)}
+                                title={script.title}
+                                className={`w-full text-left p-2 rounded-md transition-colors flex items-center group ${activeScriptId === script.id ? 'bg-primary-variant text-white' : 'bg-surface hover:bg-gray-700'}`}
+                            >
+                                <div className="flex-shrink-0 w-6 h-6 mr-2 flex items-center justify-center">{getStatusIcon(script.status)}</div>
+                                <div className="flex-grow overflow-hidden">
+                                    <p className="font-semibold truncate">{script.title}</p>
+                                    <p className="text-xs text-on-surface-secondary">{new Date(script.createdAt).toLocaleDateString()}</p>
+                                </div>
+                                <div className="flex-shrink-0 ml-2 flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <span onClick={(e) => handleAction(e, () => onArchiveScript(script.id, !script.isArchived))} className="p-1 text-gray-500 hover:text-secondary" title={script.isArchived ? "Unarchive" : "Archive"}>
+                                        {script.isArchived ? <BookUpIcon /> : <ArchiveIcon />}
+                                    </span>
+                                    <span onClick={(e) => handleAction(e, () => { if (window.confirm("Are you sure?")) onDeleteScript(script.id) })} className="p-1 text-gray-500 hover:text-error" title="Delete">
+                                        <TrashIcon />
+                                    </span>
+                                </div>
+                            </button>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-center text-on-surface-secondary text-sm mt-4">None found.</p>
+            )}
+        </div>
+    );
+};
+
+
+const LibrarySidebar: React.FC<LibrarySidebarProps> = (props) => {
+    const { 
+        scripts, archivedScripts, activeScriptId, onSelectScript, onDeleteScript, onArchiveScript,
+        onManageQueue, isAutomationRunning, favoriteTitles, onSelectFavoriteTitle,
+        onDeleteFavoriteTitle, showArchived, setShowArchived, isMobile, onClose
+    } = props;
     
-    const handleDeleteFavorite = (e: React.MouseEvent, title: string) => {
+    const handleDeleteFavorite = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
-        onDeleteFavoriteTitle(title);
+        onDeleteFavoriteTitle(id);
     };
     
     return (
-        <aside className={`bg-brand-bg border-r border-gray-700 flex flex-col p-4 transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-72'}`}>
-             <div className="flex-shrink-0 mb-4">
-                 <h2 className={`text-lg font-bold text-primary mb-2 transition-opacity ${isCollapsed ? 'opacity-0' : 'duration-300'}`}>Automation</h2>
-                 <div className={`bg-surface rounded-lg p-3 text-sm space-y-2 max-h-40 overflow-y-auto ${isCollapsed ? 'hidden' : 'block'}`}>
-                     {queue.length > 0 ? (
-                         queue.map((job, index) => (
-                             <div key={job.id} className={`p-2 rounded ${index === 0 && isAutomationRunning ? 'bg-primary-variant animate-pulse' : 'bg-brand-bg'}`}>
-                                 <p className="font-semibold truncate text-on-surface">{job.title}</p>
-                                 <p className="text-xs text-on-surface-secondary">{job.duration} mins</p>
-                             </div>
-                         ))
-                     ) : (
-                         <p className="text-on-surface-secondary text-center py-2">Queue empty.</p>
-                     )}
-                 </div>
-                 {queue.length > 0 && !isCollapsed && (
-                     <button
-                         onClick={onStartQueue}
-                         disabled={isAutomationRunning}
-                         className="w-full mt-3 bg-secondary text-on-primary font-bold py-2 rounded-lg text-sm hover:bg-opacity-90 transition-opacity disabled:bg-gray-600"
-                     >
-                         {isAutomationRunning ? 'Running...' : `Start Queue (${queue.length})`}
-                     </button>
-                 )}
+        <aside className={`bg-brand-bg border-r border-gray-700 flex flex-col p-4 h-full w-72 ${isMobile ? 'fixed inset-y-0 left-0 z-40' : ''}`}>
+             <div className="flex justify-between items-center flex-shrink-0 mb-4">
+                <h2 className="text-xl font-bold text-on-surface">Library</h2>
+                {isMobile && <button onClick={onClose}><XIcon/></button>}
              </div>
+             
+             <button
+                onClick={onManageQueue}
+                disabled={isAutomationRunning}
+                className="w-full mb-4 bg-secondary text-on-primary font-bold py-2 rounded-lg text-sm hover:bg-opacity-90 transition-opacity disabled:bg-gray-600"
+             >
+                {isAutomationRunning ? 'Automation Running...' : 'Manage Queue'}
+             </button>
             
-            <h2 className={`text-lg font-bold text-primary mb-2 flex-shrink-0 transition-opacity ${isCollapsed ? 'opacity-0' : 'duration-300'}`}>Library</h2>
-            <div className={`flex-grow overflow-y-auto overflow-x-hidden pr-2 min-h-0 ${isCollapsed ? 'space-y-4' : 'space-y-2'}`}>
-                {scripts.length > 0 ? (
-                    <ul className="space-y-2">
-                        {scripts.map(script => (
-                            <li key={script.id}>
-                                <button
-                                    onClick={() => onSelectScript(script.id)}
-                                    title={isCollapsed ? script.title : ''}
-                                    className={`w-full text-left p-3 rounded-md transition-colors flex justify-between items-center ${activeScriptId === script.id ? 'bg-primary-variant text-white' : 'bg-surface hover:bg-gray-700'}`}
-                                >
-                                    <div className="flex items-center flex-grow overflow-hidden">
-                                        <div className="flex-shrink-0 w-5 h-5 mr-2">{getStatusIcon(script.status)}</div>
-                                        <div className={`flex-grow overflow-hidden ${isCollapsed ? 'hidden' : 'block'}`}>
-                                            <p className="font-semibold truncate">{script.title}</p>
-                                            <p className="text-xs text-on-surface-secondary">{new Date(script.createdAt).toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex-shrink-0 ml-2">
-                                        <span onClick={(e) => handleDeleteScript(e, script.id)} className={`text-gray-500 hover:text-error ${isCollapsed ? 'mx-auto' : ''}`}>
-                                            <TrashIcon />
-                                        </span>
-                                    </div>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                ) : (
-                    <p className={`text-center text-on-surface-secondary mt-4 ${isCollapsed ? 'hidden' : 'block'}`}>No scripts saved.</p>
+            <div className="flex-grow overflow-y-auto pr-2 min-h-0 space-y-4">
+                <ScriptList
+                    title="Active Scripts"
+                    scripts={scripts}
+                    activeScriptId={activeScriptId}
+                    onSelectScript={onSelectScript}
+                    onDeleteScript={onDeleteScript}
+                    onArchiveScript={onArchiveScript}
+                />
+                
+                {showArchived && (
+                     <ScriptList
+                        title="Archived Scripts"
+                        scripts={archivedScripts}
+                        activeScriptId={activeScriptId}
+                        onSelectScript={onSelectScript}
+                        onDeleteScript={onDeleteScript}
+                        onArchiveScript={onArchiveScript}
+                    />
                 )}
-            </div>
 
-             <div className="flex-shrink-0 pt-4 border-t border-gray-700 mt-4">
-                <h2 className={`text-lg font-bold text-yellow-400 mb-2 flex-shrink-0 transition-opacity ${isCollapsed ? 'opacity-0' : 'duration-300'}`}>Favorite Titles</h2>
-                <div className={`flex-grow overflow-y-auto overflow-x-hidden pr-2 min-h-0 max-h-48 ${isCollapsed ? 'space-y-4' : 'space-y-2'}`}>
+                 <div>
+                    <h2 className="text-lg font-bold text-yellow-400 mb-2 flex-shrink-0">Favorite Titles</h2>
                     {favoriteTitles.length > 0 ? (
                          <ul className="space-y-2">
                             {favoriteTitles.map(fav => (
                                 <li key={fav.id}>
                                     <button
-                                        onClick={() => onSelectFavoriteTitle(fav.title)}
-                                        title={isCollapsed ? fav.title : ''}
-                                        className="w-full text-left p-3 rounded-md transition-colors flex justify-between items-center bg-surface hover:bg-gray-700"
+                                        onClick={() => onSelectFavoriteTitle(fav.title, '')}
+                                        title={fav.title}
+                                        className="w-full text-left p-2 rounded-md transition-colors flex justify-between items-center bg-surface hover:bg-gray-700 group"
                                     >
-                                        <div className={`flex items-center flex-grow overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}>
+                                        <div className="flex items-center flex-grow overflow-hidden">
                                              <StarIcon filled className="text-yellow-400 flex-shrink-0 h-5 w-5"/>
-                                             <p className={`font-semibold truncate ml-2 ${isCollapsed ? 'hidden' : 'block'}`}>{fav.title}</p>
+                                             <p className="font-semibold truncate ml-2">{fav.title}</p>
                                         </div>
-                                        <div className={`flex-shrink-0 ml-2 ${isCollapsed ? 'hidden' : 'block'}`}>
-                                            <span onClick={(e) => handleDeleteFavorite(e, fav.title)} className="text-gray-500 hover:text-error">
+                                        <div className="flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span onClick={(e) => handleDeleteFavorite(e, fav.id)} className="p-1 text-gray-500 hover:text-error">
                                                 <TrashIcon />
                                             </span>
                                         </div>
@@ -148,15 +163,21 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
                             ))}
                         </ul>
                     ) : (
-                         <p className={`text-center text-sm text-on-surface-secondary mt-4 ${isCollapsed ? 'hidden' : 'block'}`}>No favorite titles.</p>
+                         <p className="text-center text-sm text-on-surface-secondary mt-4">No favorite titles.</p>
                     )}
                 </div>
             </div>
             
             <div className="flex-shrink-0 pt-4 border-t border-gray-700 mt-auto">
-                 <button onClick={onToggleCollapse} className="w-full p-2 flex items-center justify-center text-on-surface-secondary hover:text-primary rounded-md hover:bg-surface">
-                     {isCollapsed ? <LayoutSidebarLeftExpandIcon /> : <LayoutSidebarLeftCollapseIcon />}
-                 </button>
+                <label className="flex items-center justify-center text-sm cursor-pointer">
+                    <input
+                        type="checkbox"
+                        checked={showArchived}
+                        onChange={(e) => setShowArchived(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-500 bg-gray-700 text-primary focus:ring-primary"
+                    />
+                    <span className="ml-2 text-on-surface-secondary">Show Archived</span>
+                </label>
             </div>
         </aside>
     );

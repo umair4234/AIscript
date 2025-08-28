@@ -295,3 +295,37 @@ Generate 5 new titles that capture the same viral essence.
 FINAL OUTPUT RULES:
 - Your output must be a numbered list of 5 new video titles.
 - Do not add any extra text, explanations, or analysis in your final response. Just the list.`;
+
+export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are an expert YouTube title creator for a viral storytelling channel. I will provide you with a full script. Your task is to read and understand the story, then generate 5 unique, compelling, and emotionally resonant titles that create intrigue and promise a satisfying story of justice for an animal victim.
+
+Follow the winning title formula:
+1.  **Two-Part Structure:** Start with the tragic setup (the animal's situation) and follow with an unexpected twist (the introduction of the heroes and the promise of justice).
+2.  **High-Emotion Keywords:** Use words like "Abandoned," "Left to Die," "Chained," "Ignored," but also "Then a Little Girl Saw," "Until Her Lawyer Dad Found Proof," "They Didn't Expect a 10-Year-Old to Sue Them."
+3.  **Create a Story Gap:** The title must make the viewer ask a question they need answered by watching.
+
+## FULL SCRIPT TEXT
+{script_text}
+
+## FINAL OUTPUT
+Your output must be a valid JSON array of 5 strings. Do NOT wrap the JSON in markdown code blocks. Your entire response must be ONLY the raw JSON, starting with \`[\` and ending with \`]\`.
+`;
+
+export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube scriptwriter. I will provide a video title and the full video script. Your task is to generate a perfectly formatted YouTube video description.
+
+## VIDEO TITLE
+{title}
+
+## FULL SCRIPT TEXT
+{script_text}
+
+## DESCRIPTION FORMAT (Strict Requirement)
+Your output must follow this structure exactly:
+1.  The full video title on the first line.
+2.  An empty line.
+3.  A concise, engaging 2-3 sentence summary of the video's story.
+4.  An empty line.
+5.  Exactly three relevant hashtags, each on its own line (e.g., #dogrescue, #animalheroes, #heartwarmingstory).
+
+## FINAL OUTPUT
+Provide ONLY the raw text for the description. Do not add any extra explanations or titles like "Description:".
+`;

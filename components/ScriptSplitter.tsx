@@ -3,11 +3,14 @@ import { ArrowLeftIcon, CheckIcon, CopyIcon } from './Icons';
 
 interface ScriptSplitterProps {
     initialScript: string;
-    onBack: () => void;
+    initialSections?: string[];
+    onSplit?: (sections: string[]) => void;
+    onBack?: () => void;
 }
 
 const ScriptStats: React.FC<{ text: string }> = ({ text }) => {
     const stats = useMemo(() => {
+        if (!text) return { characters: 0, words: 0, sentences: 0, simpleDuration: '0:00' };
         const characters = text.length;
         const words = text.trim().split(/\s+/).filter(Boolean).length;
         const sentences = text.split(/[.!?]+/).filter(Boolean).length;
@@ -40,12 +43,20 @@ const ScriptStats: React.FC<{ text: string }> = ({ text }) => {
     );
 };
 
-const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, onBack }) => {
+const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialSections, onSplit, onBack }) => {
     const [script, setScript] = useState(initialScript);
     const [maxChars, setMaxChars] = useState(10000);
     const [keyword, setKeyword] = useState('');
-    const [sections, setSections] = useState<string[]>([]);
+    const [sections, setSections] = useState<string[]>(initialSections || []);
     const [copiedSections, setCopiedSections] = useState<Set<number>>(new Set());
+    
+    useEffect(() => {
+      setScript(initialScript);
+    }, [initialScript]);
+    
+    useEffect(() => {
+      setSections(initialSections || []);
+    }, [initialSections]);
 
     const handleSplit = () => {
         let textToSplit = script.trim();
@@ -82,6 +93,9 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, onBack }
 
         setSections(resultingSections);
         setCopiedSections(new Set());
+        if(onSplit) {
+            onSplit(resultingSections);
+        }
     };
     
     const handleCopy = (text: string, index: number) => {
@@ -92,9 +106,11 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, onBack }
     return (
         <div className="w-full flex-grow flex flex-col p-6 md:p-8 overflow-y-auto">
             <div className="flex items-center mb-4">
-                <button onClick={onBack} className="p-2 mr-4 bg-surface hover:bg-primary-variant rounded-full">
-                    <ArrowLeftIcon />
-                </button>
+                {onBack && (
+                    <button onClick={onBack} className="p-2 mr-4 bg-surface hover:bg-primary-variant rounded-full">
+                        <ArrowLeftIcon />
+                    </button>
+                )}
                 <div>
                     <h2 className="text-2xl font-bold text-primary">Script Splitting Tool</h2>
                     <p className="text-on-surface-secondary">Paste your script, get stats, and split it into manageable sections.</p>
@@ -108,6 +124,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, onBack }
                     value={script}
                     onChange={(e) => setScript(e.target.value)}
                     className="w-full h-64 bg-brand-bg border border-gray-600 rounded-md p-3 text-on-surface focus:ring-primary focus:border-primary font-mono text-sm"
+                    readOnly={!!onSplit} // Make it readonly when used in the studio
                 />
             </div>
             

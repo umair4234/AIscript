@@ -52,11 +52,16 @@ export function saveGroqApiKeys(keys: string[]): void {
 
 // === Script Library Functions ===
 
-export function getScripts(): ScriptRecord[] {
+export function getScripts(includeArchived = false): ScriptRecord[] {
     try {
         const scriptsJson = localStorage.getItem(SCRIPTS_KEY);
         if (!scriptsJson) return [];
-        const scripts = JSON.parse(scriptsJson) as ScriptRecord[];
+        let scripts = JSON.parse(scriptsJson) as ScriptRecord[];
+        
+        if (!includeArchived) {
+            scripts = scripts.filter(script => !script.isArchived);
+        }
+        
         // Sort by most recently created
         return scripts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
@@ -65,13 +70,14 @@ export function getScripts(): ScriptRecord[] {
     }
 }
 
+
 export function getScriptById(id: string): ScriptRecord | null {
-    const scripts = getScripts();
+    const scripts = getScripts(true); // Search all scripts including archived
     return scripts.find(script => script.id === id) || null;
 }
 
-export function saveScript(scriptData: Omit<ScriptRecord, 'id' | 'createdAt'>, id: string | null = null): ScriptRecord {
-    const scripts = getScripts();
+export function saveScript(scriptData: Partial<Omit<ScriptRecord, 'id' | 'createdAt'>>, id: string | null = null): ScriptRecord {
+    const scripts = getScripts(true);
     const now = new Date().toISOString();
     
     if (id) {
@@ -84,21 +90,38 @@ export function saveScript(scriptData: Omit<ScriptRecord, 'id' | 'createdAt'>, i
         }
     }
     
-    // Create new script
+    // Create new script. Ensure required fields have defaults.
     const newScript: ScriptRecord = {
-        ...scriptData,
         id: `script_${Date.now()}`,
         createdAt: now,
+        title: scriptData.title || 'Untitled Script',
+        plot: scriptData.plot || '',
+        outline: scriptData.outline || null,
+        hook: scriptData.hook || '',
+        finalScript: scriptData.finalScript || [],
+        status: scriptData.status || null,
+        ...scriptData,
     };
-    const updatedScripts = [newScript, ...scripts];
+    
+    const updatedScripts = [newScript, ...scripts.filter(s => s.id !== newScript.id)];
     localStorage.setItem(SCRIPTS_KEY, JSON.stringify(updatedScripts));
     return newScript;
 }
 
+
 export function deleteScript(id: string): void {
-    const scripts = getScripts();
+    const scripts = getScripts(true);
     const updatedScripts = scripts.filter(script => script.id !== id);
     localStorage.setItem(SCRIPTS_KEY, JSON.stringify(updatedScripts));
+}
+
+export function onArchiveScript(id: string, isArchived: boolean): void {
+    const scripts = getScripts(true);
+    const index = scripts.findIndex(s => s.id === id);
+    if (index !== -1) {
+        scripts[index].isArchived = isArchived;
+        localStorage.setItem(SCRIPTS_KEY, JSON.stringify(scripts));
+    }
 }
 
 
@@ -116,7 +139,14 @@ export function getQueue(): AutomationJob[] {
 
 export function saveQueue(queue: AutomationJob[]): void {
     try {
-        localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+        // Ensure all required fields are present when saving
+        const validQueue = queue.map(job => ({
+            id: job.id,
+            title: job.title,
+            duration: job.duration || 100, // Default duration if missing
+            plot: job.plot || '' // Default plot if missing
+        }));
+        localStorage.setItem(QUEUE_KEY, JSON.stringify(validQueue));
     } catch (error) {
         console.error("Failed to save queue to localStorage", error);
     }

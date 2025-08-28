@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PasswordProtection from './components/PasswordProtection';
-import { ScissorsIcon, SparklesIcon, FileTextIcon, SettingsIcon } from './components/Icons';
+import { ScissorsIcon, SparklesIcon, FileTextIcon, SettingsIcon, MenuIcon } from './components/Icons';
 import ScriptSplitter from './components/ScriptSplitter';
 import ScriptWriterView from './components/ScriptWriterView';
 import TitleStudio from './components/TitleStudio';
@@ -74,6 +74,8 @@ const App: React.FC = () => {
     const [googleGenAI, setGoogleGenAI] = useState<any>(null);
     const [isLoadingSdk, setIsLoadingSdk] = useState(true);
     const [sdkError, setSdkError] = useState<string | null>(null);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
 
     // API Key management is now centralized in the main App component
     const [geminiKeys, setGeminiKeys] = useState<string[]>([]);
@@ -177,6 +179,8 @@ const App: React.FC = () => {
                             googleGenAI={googleGenAI}
                             geminiKeys={geminiKeys}
                             groqKeys={groqKeys}
+                            isMobileSidebarOpen={isMobileSidebarOpen}
+                            setIsMobileSidebarOpen={setIsMobileSidebarOpen}
                         />;
             case 'splitter':
                 return <ScriptSplitter initialScript={scriptForSplitter} onBack={handleBackToHome} />;
@@ -187,7 +191,16 @@ const App: React.FC = () => {
     };
 
     return (
-        <main className="h-screen w-screen flex flex-col bg-brand-bg text-on-surface">
+        <main className="h-screen w-screen flex flex-col bg-brand-bg text-on-surface overflow-hidden">
+           {currentView === 'writer' && (
+                <button
+                    onClick={() => setIsMobileSidebarOpen(true)}
+                    className="md:hidden fixed top-4 left-4 z-50 text-on-surface-secondary hover:text-primary p-3 rounded-full bg-surface hover:bg-primary-variant shadow-lg"
+                    aria-label="Open Library"
+                >
+                    <MenuIcon />
+                </button>
+           )}
            {renderView()}
 
            {/* Global Settings Button */}

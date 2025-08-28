@@ -41,13 +41,20 @@ export interface ScriptRecord {
     hook: string;
     finalScript: ChapterContent[];
     status: GenerationState;
+    errorMessage?: string; // For tracking errors in automation
+    isArchived?: boolean; // For the new archive feature
+    // Post-generation fields
+    suggestedTitles?: string[];
+    finalTitle?: string;
+    finalDescription?: string;
+    splitScript?: string[];
 }
 
 export interface AutomationJob {
     id: string;
     title: string;
-    duration: number;
-    plot: string;
+    duration: number; // Duration is now part of the job
+    plot: string;     // Plot is now part of the job
 }
 
 export interface Style {
