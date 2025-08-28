@@ -11,7 +11,7 @@ interface ScriptEditorProps {
   onApproveHook: () => void;
   onRegenerateHooks: () => void;
   onSelectHook: (index: number) => void;
-  onGoToSplitter: () => void;
+  onGoToSplitter: (script: string) => void;
   regeneratingChapter: number | null;
   onRegenerateChapter: (chapterNumber: number) => void;
   onStopGeneration: () => void;
@@ -107,7 +107,7 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
   const [hasCopied, setHasCopied] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const fullScriptText = useMemo(() => {
+  const fullScriptTextWithHeadings = useMemo(() => {
     if (!approvedHook && finalScript.length === 0) return '';
     let script = approvedHook;
     finalScript.sort((a, b) => a.chapter - b.chapter).forEach(chapter => {
@@ -117,10 +117,19 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
     return script;
   }, [approvedHook, finalScript]);
   
-  const wordCount = useMemo(() => fullScriptText.trim().split(/\s+/).filter(Boolean).length, [fullScriptText]);
+  const scriptTextForCopyAndSplit = useMemo(() => {
+    if (!approvedHook && finalScript.length === 0) return '';
+    let script = approvedHook;
+    finalScript.sort((a, b) => a.chapter - b.chapter).forEach(chapter => {
+        script += `\n\n\n${chapter.content}`;
+    });
+    return script;
+  }, [approvedHook, finalScript]);
+  
+  const wordCount = useMemo(() => fullScriptTextWithHeadings.trim().split(/\s+/).filter(Boolean).length, [fullScriptTextWithHeadings]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(fullScriptText);
+    navigator.clipboard.writeText(scriptTextForCopyAndSplit);
     setHasCopied(true);
     setTimeout(() => setHasCopied(false), 2000);
   };
@@ -186,7 +195,7 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                     <div key={chapter.chapter}>
                         <div className="flex justify-between items-center mt-6 mb-2">
                              <h3 className="text-xl font-bold text-secondary">Chapter {chapter.chapter}</h3>
-                             {(state === GenerationState.COMPLETED || state === GenerationState.PAUSED) && (
+                             {(state === GenerationState.COMPLETED || state === GenerationState.PAUSED || state === GenerationState.ERROR) && (
                                  <button 
                                     onClick={() => onRegenerateChapter(chapter.chapter)} 
                                     disabled={regeneratingChapter !== null}
@@ -240,14 +249,14 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                 )}
                 {state === GenerationState.COMPLETED && (
                     <button
-                        onClick={onGoToSplitter}
+                        onClick={() => onGoToSplitter(scriptTextForCopyAndSplit)}
                         className="px-4 py-2 bg-secondary text-on-primary font-bold rounded-lg hover:bg-opacity-90 text-sm"
                     >
                         Split Script
                     </button>
                 )}
                  <span className="text-sm text-on-surface-secondary">{wordCount.toLocaleString()} words</span>
-                 <button onClick={handleCopy} className="text-on-surface-secondary hover:text-primary transition-colors">
+                 <button onClick={handleCopy} title="Copy script text without chapter headings" className="text-on-surface-secondary hover:text-primary transition-colors">
                      {hasCopied ? <CheckIcon /> : <CopyIcon />}
                  </button>
              </div>

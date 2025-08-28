@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AIManager } from '../services/aiService';
-import { getCompetitorAnalysisTitlePrompt, getDefaultTitlePrompt, getPlotIdeaPrompt } from '../services/promptService';
+import { getCompetitorAnalysisTitlePrompt, getDefaultTitlePrompt, getPlotIdeaPrompt, getSimilarTitlesPrompt } from '../services/promptService';
 import * as storage from '../services/storageService';
 import { FavoriteTitle } from '../types';
-import { ArrowLeftIcon, LightbulbIcon, StarIcon, TrashIcon } from './Icons';
+import { ArrowLeftIcon, LightbulbIcon, SparklesIcon, StarIcon, TrashIcon } from './Icons';
 
 interface TitleStudioProps {
     onBack: () => void;
@@ -21,6 +21,7 @@ const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGen
     const [error, setError] = useState<string | null>(null);
     const [plotIdeas, setPlotIdeas] = useState<Record<string, string>>({});
     const [loadingPlot, setLoadingPlot] = useState<string | null>(null);
+    const [loadingSimilar, setLoadingSimilar] = useState<string | null>(null);
 
     const aiManager = useMemo(() => {
         return new AIManager(geminiKeys, groqKeys, googleGenAI);
@@ -73,6 +74,33 @@ const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGen
             setPlotIdeas(prev => ({...prev, [title]: "Error generating plot idea."}));
         } finally {
             setLoadingPlot(null);
+        }
+    };
+
+    const handleGenerateSimilar = async (title: string) => {
+        setLoadingSimilar(title);
+        let fullText = '';
+        try {
+            const prompt = getSimilarTitlesPrompt(title);
+            await aiManager.generateStreamWithRotation(
+                prompt,
+                (chunk) => { fullText += chunk; },
+                () => {},
+                new AbortController().signal
+            );
+            const similarTitles = fullText.trim().split('\n').map(t => t.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+            
+            setGeneratedTitles(prev => {
+                const index = prev.findIndex(t => t === title);
+                if (index === -1) return [...prev, ...similarTitles];
+                const newTitles = [...prev];
+                newTitles.splice(index + 1, 0, ...similarTitles);
+                return newTitles;
+            });
+        } catch (err: any) {
+            setError(`Failed to generate similar titles: ${err.message}`);
+        } finally {
+            setLoadingSimilar(null);
         }
     };
 
@@ -150,12 +178,20 @@ const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGen
                             <p className="text-on-surface-secondary text-center py-8">Your generated titles will appear here.</p>
                         )}
                         {generatedTitles.map((title, index) => (
-                            <div key={index} className="bg-brand-bg p-3 rounded-md group">
+                            <div key={`${title}-${index}`} className="bg-brand-bg p-3 rounded-md group">
                                 <div className="flex justify-between items-start">
                                     <p className="text-on-surface flex-grow pr-2">{title}</p>
                                     <div className="flex flex-col sm:flex-row items-center gap-2 flex-shrink-0">
                                         <button onClick={() => handleToggleFavorite(title)} className="text-gray-500 hover:text-yellow-400">
                                             <StarIcon filled={favoriteTitles.some(f => f.title === title)} />
+                                        </button>
+                                         <button 
+                                            onClick={() => handleGenerateSimilar(title)}
+                                            disabled={loadingSimilar === title}
+                                            title="Generate similar titles"
+                                            className="text-gray-500 hover:text-primary disabled:opacity-50 disabled:animate-spin"
+                                        >
+                                            <SparklesIcon className="h-6 w-6"/>
                                         </button>
                                         <button onClick={() => handleUseTitle(title)} className="opacity-0 group-hover:opacity-100 text-sm bg-secondary text-on-primary px-3 py-1 rounded-md hover:opacity-80 transition-opacity">Use</button>
                                     </div>

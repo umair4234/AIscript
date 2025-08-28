@@ -83,7 +83,7 @@ interface ScriptWriterViewProps {
 
 const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initialPlot, onNavigateHome, onNavigateToSplitter, googleGenAI, geminiKeys, groqKeys }) => {
     const [title, setTitle] = useState(initialTitle || '');
-    const [duration, setDuration] = useState(60);
+    const [duration, setDuration] = useState(100);
     const [plot, setPlot] = useState(initialPlot || '');
     const [state, setState] = useState<GenerationState>(GenerationState.IDLE);
     const [error, setError] = useState<string | null>(null);
@@ -142,7 +142,7 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
     const resetState = useCallback((clearInputs = true) => {
         if (clearInputs) {
             setTitle('');
-            setDuration(60);
+            setDuration(100);
             setPlot('');
         }
         setState(GenerationState.IDLE);
@@ -164,19 +164,22 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
         }
     }, [aiManager]);
     
-    const saveCurrentScript = useCallback((updates: Partial<Omit<ScriptRecord, 'id' | 'createdAt'>>) => {
+    const saveCurrentScript = useCallback((updates: Partial<Omit<ScriptRecord, 'id' | 'createdAt' | 'status'>> & { state?: GenerationState }) => {
+        const currentState = updates.state ?? state;
         const scriptToSave = {
             title: title || 'Untitled Script',
             plot: updates.plot ?? plot,
             outline: updates.outline ?? outline,
             hook: updates.hook ?? approvedHook,
             finalScript: updates.finalScript ?? finalScript,
+            status: currentState,
         };
         const saved = storage.saveScript(scriptToSave, activeScript?.id ?? null);
         setActiveScript(saved);
         setScripts(storage.getScripts());
         return saved;
-    }, [title, plot, outline, approvedHook, finalScript, activeScript]);
+    }, [state, title, plot, outline, approvedHook, finalScript, activeScript]);
+
 
     const handleGenerateOutline = useCallback(async (data: { title: string; duration: number; plot: string; }) => {
         resetState(false);
@@ -201,8 +204,8 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             if (parsedOutline) {
                 setOutline(parsedOutline);
                 setTitle(parsedOutline.title);
-                saveCurrentScript({ outline: parsedOutline, title: parsedOutline.title, plot: data.plot });
                 setState(GenerationState.AWAITING_OUTLINE_APPROVAL);
+                saveCurrentScript({ outline: parsedOutline, title: parsedOutline.title, plot: data.plot, state: GenerationState.AWAITING_OUTLINE_APPROVAL });
             } else {
                 throw new Error("Failed to parse the generated outline. The format might be incorrect or missing required fields like word counts for every chapter.");
             }
@@ -220,8 +223,8 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             setRawOutlineText(text);
             setOutline(parsed);
             setTitle(parsed.title);
-            saveCurrentScript({ outline: parsed, title: parsed.title });
             setState(GenerationState.AWAITING_OUTLINE_APPROVAL);
+            saveCurrentScript({ outline: parsed, title: parsed.title, state: GenerationState.AWAITING_OUTLINE_APPROVAL });
             setIsOutlineManual(false);
             setError(null);
         } else {
@@ -265,14 +268,16 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             const parsedHooks = JSON.parse(cleanedText);
             setHooks(parsedHooks);
             setState(GenerationState.AWAITING_HOOK_SELECTION);
+            saveCurrentScript({ state: GenerationState.AWAITING_HOOK_SELECTION });
         } catch (err: any) {
             console.error("Raw text that failed parsing:", fullText);
             console.error(err);
             const detail = err instanceof SyntaxError ? `Unexpected token in AI response. The AI may have returned malformed JSON.` : err.message;
             setError(`Failed to generate or parse hooks. ${detail}`);
             setState(GenerationState.ERROR);
+            saveCurrentScript({ state: GenerationState.ERROR });
         }
-    }, [aiManager, outline]);
+    }, [aiManager, outline, saveCurrentScript]);
 
     const handleGenerateChapters = useCallback(async (startChapter: number = 1) => {
         if (!outline || (startChapter === 1 && selectedHookIndex === null)) return;
@@ -287,7 +292,7 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
         if (startChapter === 1) {
             setApprovedHook(hookToUse);
             setFinalScript([]); // Clear for a fresh start
-            saveCurrentScript({ hook: hookToUse, finalScript: [] });
+            saveCurrentScript({ hook: hookToUse, finalScript: [], state: GenerationState.GENERATING_CHAPTERS });
         }
         
         setState(GenerationState.GENERATING_CHAPTERS);
@@ -334,19 +339,21 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             } catch (err: any) {
                 if (err.name === 'AbortError') {
                     setState(GenerationState.PAUSED);
-                    saveCurrentScript({ finalScript: currentRunScript });
+                    saveCurrentScript({ finalScript: currentRunScript, state: GenerationState.PAUSED });
                     return;
                 }
                 console.error(err);
                 setError(`Failed on chapter ${i}: ${err.message}`);
                 setState(GenerationState.ERROR);
-                saveCurrentScript({ finalScript: currentRunScript });
+                saveCurrentScript({ finalScript: currentRunScript, state: GenerationState.ERROR });
                 return;
             }
         }
         
-        saveCurrentScript({ finalScript: currentRunScript });
         setState(GenerationState.COMPLETED);
+        saveCurrentScript({ finalScript: currentRunScript, state: GenerationState.COMPLETED });
+        alert('Script generation completed successfully!');
+
     }, [outline, selectedHookIndex, hooks, approvedHook, finalScript, aiManager, saveCurrentScript, styles, selectedStyleId]);
     
     const handleRegenerateChapter = useCallback(async (chapterNumber: number) => {
@@ -400,36 +407,23 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             setActiveScript(script);
             setTitle(script.title);
             setPlot(script.plot || '');
+            setState(script.status || GenerationState.IDLE);
             if (script.outline) {
                 setOutline(script.outline);
                 setRawOutlineText("Outline loaded from library. Raw text editing not available.");
-                setState(GenerationState.AWAITING_OUTLINE_APPROVAL);
                  setIsOutlineCollapsed(false);
             }
             if (script.hook) {
                 setApprovedHook(script.hook);
                 setHooks([script.hook]);
                 setSelectedHookIndex(0);
-                 setState(GenerationState.GENERATING_CHAPTERS);
             }
             if (script.finalScript && script.finalScript.length > 0) {
                 setFinalScript(script.finalScript);
-                const isComplete = script.outline && script.finalScript.length === script.outline.chapters.length;
-                setState(isComplete ? GenerationState.COMPLETED : GenerationState.PAUSED);
             }
         }
     };
     
-    const fullScriptText = useMemo(() => {
-        if (!approvedHook && finalScript.length === 0) return '';
-        let script = approvedHook;
-        finalScript.forEach(chapter => {
-          script += `\n\n\nChapter ${chapter.chapter}\n\n`;
-          script += chapter.content;
-        });
-        return script;
-      }, [approvedHook, finalScript]);
-
     const handleAnalyzeStyle = useCallback(async (scripts: string[]): Promise<string> => {
         abortController.current = new AbortController();
         let fullText = '';
@@ -534,6 +528,9 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
                             error={error}
                             currentChapter={currentChapter}
                             totalChapters={outline?.chapters.length || 0}
+                            outline={outline}
+                            finalScript={finalScript}
+                            onRegenerateChapter={handleRegenerateChapter}
                         />
                          { outline && !isOutlineManual && (
                               <div className="bg-surface p-4 rounded-lg shadow-lg">
@@ -561,7 +558,7 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
                             onApproveHook={() => handleGenerateChapters(1)}
                             onRegenerateHooks={() => setIsRegenHookModalOpen(true)}
                             onSelectHook={setSelectedHookIndex}
-                            onGoToSplitter={() => onNavigateToSplitter(fullScriptText)}
+                            onGoToSplitter={onNavigateToSplitter}
                             regeneratingChapter={regeneratingChapter}
                             onRegenerateChapter={handleRegenerateChapter}
                             onStopGeneration={handleStopGeneration}

@@ -40,6 +40,7 @@ export interface ScriptRecord {
     outline: ScriptOutline | null;
     hook: string;
     finalScript: ChapterContent[];
+    status: GenerationState;
 }
 
 export interface AutomationJob {

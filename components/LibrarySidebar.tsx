@@ -1,6 +1,6 @@
 import React from 'react';
-import { ScriptRecord, AutomationJob, FavoriteTitle } from '../types';
-import { TrashIcon, LayoutSidebarLeftCollapseIcon, LayoutSidebarLeftExpandIcon, StarIcon, SparklesIcon } from './Icons';
+import { ScriptRecord, AutomationJob, FavoriteTitle, GenerationState } from '../types';
+import { TrashIcon, LayoutSidebarLeftCollapseIcon, LayoutSidebarLeftExpandIcon, StarIcon, CheckIcon, RefreshIcon, StopIcon } from './Icons';
 
 interface LibrarySidebarProps {
     scripts: ScriptRecord[];
@@ -16,6 +16,25 @@ interface LibrarySidebarProps {
     onSelectFavoriteTitle: (title: string) => void;
     onDeleteFavoriteTitle: (title: string) => void;
 }
+
+const getStatusIcon = (status: GenerationState) => {
+    switch (status) {
+        case GenerationState.COMPLETED:
+            return <div title="Completed"><CheckIcon /></div>;
+        case GenerationState.GENERATING_OUTLINE:
+        case GenerationState.GENERATING_HOOK:
+        case GenerationState.GENERATING_CHAPTERS:
+            return <div title="In Progress" className="animate-spin"><RefreshIcon /></div>;
+        case GenerationState.PAUSED:
+        case GenerationState.ERROR:
+             return <div title="Stopped / Error"><StopIcon /></div>;
+        case GenerationState.AWAITING_HOOK_SELECTION:
+        case GenerationState.AWAITING_OUTLINE_APPROVAL:
+             return <div title="In Progress"><RefreshIcon /></div>;
+        default:
+            return null;
+    }
+};
 
 const LibrarySidebar: React.FC<LibrarySidebarProps> = ({ 
     scripts, 
@@ -82,9 +101,12 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = ({
                                     title={isCollapsed ? script.title : ''}
                                     className={`w-full text-left p-3 rounded-md transition-colors flex justify-between items-center ${activeScriptId === script.id ? 'bg-primary-variant text-white' : 'bg-surface hover:bg-gray-700'}`}
                                 >
-                                    <div className={`flex-grow overflow-hidden ${isCollapsed ? 'hidden' : 'block'}`}>
-                                        <p className="font-semibold truncate">{script.title}</p>
-                                        <p className="text-xs text-on-surface-secondary">{new Date(script.createdAt).toLocaleString()}</p>
+                                    <div className="flex items-center flex-grow overflow-hidden">
+                                        <div className="flex-shrink-0 w-5 h-5 mr-2">{getStatusIcon(script.status)}</div>
+                                        <div className={`flex-grow overflow-hidden ${isCollapsed ? 'hidden' : 'block'}`}>
+                                            <p className="font-semibold truncate">{script.title}</p>
+                                            <p className="text-xs text-on-surface-secondary">{new Date(script.createdAt).toLocaleString()}</p>
+                                        </div>
                                     </div>
                                     <div className="flex-shrink-0 ml-2">
                                         <span onClick={(e) => handleDeleteScript(e, script.id)} className={`text-gray-500 hover:text-error ${isCollapsed ? 'mx-auto' : ''}`}>

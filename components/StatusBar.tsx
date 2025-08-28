@@ -1,5 +1,6 @@
-import React from 'react';
-import { GenerationState, ApiProvider } from '../types';
+import React, { useState, useMemo } from 'react';
+import { GenerationState, ApiProvider, ScriptOutline, ChapterContent } from '../types';
+import { ChevronDownIcon, ChevronUpIcon, RefreshIcon } from './Icons';
 
 interface ProgressBarProps {
     current: number;
@@ -23,6 +24,73 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ current, total, label }) => {
     );
 };
 
+interface ChapterProgressDetailsProps {
+    outline: ScriptOutline;
+    finalScript: ChapterContent[];
+    state: GenerationState;
+    currentChapter: number;
+    onRegenerateChapter: (chapterNumber: number) => void;
+}
+
+const ChapterProgressDetails: React.FC<ChapterProgressDetailsProps> = ({ outline, finalScript, state, currentChapter, onRegenerateChapter }) => {
+    const chapterDetails = useMemo(() => {
+        return outline.chapters.map(chap => {
+            const finalChapter = finalScript.find(fc => fc.chapter === chap.chapter);
+            const wordsWritten = finalChapter ? finalChapter.content.trim().split(/\s+/).filter(Boolean).length : 0;
+            
+            let status: 'Completed' | 'Writing...' | 'Pending' | 'Failed' = 'Pending';
+            if (finalChapter && wordsWritten > 0) {
+                status = 'Completed';
+            }
+            if (state === GenerationState.GENERATING_CHAPTERS && currentChapter === chap.chapter) {
+                status = 'Writing...';
+            }
+            if ((state === GenerationState.ERROR || state === GenerationState.PAUSED) && !finalChapter) {
+                status = 'Failed';
+            }
+
+            return {
+                ...chap,
+                wordsWritten,
+                status
+            };
+        });
+    }, [outline, finalScript, state, currentChapter]);
+
+    const getStatusColor = (status: string) => {
+        switch(status) {
+            case 'Completed': return 'text-green-400';
+            case 'Writing...': return 'text-yellow-400 animate-pulse';
+            case 'Failed': return 'text-error';
+            default: return 'text-on-surface-secondary';
+        }
+    };
+    
+    return (
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+            {chapterDetails.map(chap => (
+                <div key={chap.chapter} className="grid grid-cols-12 gap-2 items-center text-xs bg-brand-bg p-2 rounded">
+                    <span className="font-bold col-span-2">Ch. {chap.chapter}</span>
+                    <span className="col-span-4">Assigned: {chap.wordCount} words</span>
+                    <span className="col-span-3">Written: {chap.wordsWritten}</span>
+                    <span className={`font-semibold col-span-2 ${getStatusColor(chap.status)}`}>{chap.status}</span>
+                    <div className="col-span-1 text-right">
+                         {(chap.status === 'Completed' || chap.status === 'Failed') && (
+                            <button
+                                onClick={() => onRegenerateChapter(chap.chapter)}
+                                title={`Regenerate Chapter ${chap.chapter}`}
+                                className="text-on-surface-secondary hover:text-primary"
+                            >
+                                <RefreshIcon />
+                            </button>
+                         )}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 
 interface StatusBarProps {
   state: GenerationState;
@@ -32,9 +100,15 @@ interface StatusBarProps {
   error: string | null;
   currentChapter: number;
   totalChapters: number;
+  outline: ScriptOutline | null;
+  finalScript: ChapterContent[];
+  onRegenerateChapter: (chapterNumber: number) => void;
 }
 
-const StatusBar: React.FC<StatusBarProps> = ({ state, apiProvider, apiKeyIndex, totalApiKeys, error, currentChapter, totalChapters }) => {
+const StatusBar: React.FC<StatusBarProps> = (props) => {
+  const { state, apiProvider, apiKeyIndex, totalApiKeys, error, currentChapter, totalChapters, outline } = props;
+  const [isDetailsCollapsed, setIsDetailsCollapsed] = useState(true);
+
   const getStatusMessage = () => {
     switch (state) {
       case GenerationState.IDLE:
@@ -77,15 +151,27 @@ const StatusBar: React.FC<StatusBarProps> = ({ state, apiProvider, apiKeyIndex, 
           {apiKeyIndex >= totalApiKeys ? 'All keys used' : `Using key ${apiKeyIndex + 1} of ${totalApiKeys}`}
         </span>
       </div>
+      
       {state === GenerationState.GENERATING_CHAPTERS && totalChapters > 0 && (
-          <div className="pt-2 border-t border-gray-700">
+          <div className="pt-2">
               <ProgressBar current={currentChapter} total={totalChapters} label="Chapter Progress" />
           </div>
       )}
+      
       {error && (
         <div className="pt-2 border-t border-gray-700">
           <p className="text-error font-semibold">Error Details:</p>
           <p className="text-error text-xs">{error}</p>
+        </div>
+      )}
+      
+      {outline && (
+        <div className="pt-2 border-t border-gray-700">
+            <button onClick={() => setIsDetailsCollapsed(!isDetailsCollapsed)} className="flex justify-between items-center w-full py-1">
+                <span className="font-semibold text-on-surface">Chapter Details</span>
+                {isDetailsCollapsed ? <ChevronDownIcon /> : <ChevronUpIcon />}
+            </button>
+            {!isDetailsCollapsed && <div className="mt-2"><ChapterProgressDetails {...props} /></div>}
         </div>
       )}
     </div>

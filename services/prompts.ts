@@ -283,3 +283,15 @@ VIDEO TITLE:
 
 FINAL OUTPUT:
 Provide ONLY the 2-3 sentence plot idea. Do not add any extra text, titles, or explanations.`;
+
+export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a successful video title. Your task is to generate 5 new, original titles that use the same successful formula but are even more compelling. They must be about dogs and follow the "Lily's Law" theme (a little girl and her lawyer dad seeking justice for dogs).
+
+SUCCESSFUL TITLE TO EMULATE:
+"{title}"
+
+YOUR TASK:
+Generate 5 new titles that capture the same viral essence.
+
+FINAL OUTPUT RULES:
+- Your output must be a numbered list of 5 new video titles.
+- Do not add any extra text, explanations, or analysis in your final response. Just the list.`;

@@ -86,8 +86,9 @@ export const HomeIcon = () => (
     </svg>
 );
 
-export const SparklesIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+// FIX: Added `className` prop to allow for flexible styling, resolving a TypeScript error.
+export const SparklesIcon = ({ className = "h-8 w-8" }: { className?: string; }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.25 2.25L15 10l-2.25-2.25L15 3l2.25 2.25L22 3l-2.25 2.25L22 10l-2.25-2.25L15 10" />
     </svg>
 );

@@ -1,5 +1,5 @@
 import type { ScriptOutline, ChapterOutline } from '../types';
-import { OUTLINE_PROMPT_TEMPLATE, MULTIPLE_HOOKS_PROMPT_TEMPLATE, CHAPTER_PROMPT_TEMPLATE, STYLE_ANALYSIS_PROMPT_TEMPLATE, DEFAULT_TITLE_PROMPT_TEMPLATE, COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE, PLOT_IDEA_PROMPT_TEMPLATE, REGENERATE_HOOK_WITH_FEEDBACK_PROMPT_TEMPLATE } from './prompts';
+import { OUTLINE_PROMPT_TEMPLATE, MULTIPLE_HOOKS_PROMPT_TEMPLATE, CHAPTER_PROMPT_TEMPLATE, STYLE_ANALYSIS_PROMPT_TEMPLATE, DEFAULT_TITLE_PROMPT_TEMPLATE, COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE, PLOT_IDEA_PROMPT_TEMPLATE, REGENERATE_HOOK_WITH_FEEDBACK_PROMPT_TEMPLATE, GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE } from './prompts';
 
 export const getOutlinePrompt = (title: string, duration: number, plot: string): string => {
   return OUTLINE_PROMPT_TEMPLATE
@@ -66,3 +66,7 @@ export const getCompetitorAnalysisTitlePrompt = (competitorTitles: string): stri
 export const getPlotIdeaPrompt = (title: string): string => {
     return PLOT_IDEA_PROMPT_TEMPLATE.replace('{title}', title);
 }
+
+export const getSimilarTitlesPrompt = (title: string): string => {
+    return GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE.replace('{title}', title);
+};
