@@ -1,0 +1,5 @@
+{
+  "name": "AI Script Writer Pro",
+  "description": "An intelligent tool for writing long-form scripts using Gemini and Groq APIs, featuring automatic API key rotation and a structured, multi-step generation process.",
+  "requestFramePermissions": []
+}
