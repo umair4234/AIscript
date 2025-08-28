@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScriptRecord, AutomationJob, FavoriteTitle, GenerationState } from '../types';
-import { TrashIcon, StarIcon, CheckIcon, RefreshIcon, StopIcon, ArchiveIcon, BookUpIcon, XIcon } from './Icons';
+import { TrashIcon, StarIcon, CheckIcon, RefreshIcon, StopIcon, ArchiveIcon, BookUpIcon, XIcon, PlayIcon } from './Icons';
 
 interface LibrarySidebarProps {
     scripts: ScriptRecord[];
@@ -10,7 +10,9 @@ interface LibrarySidebarProps {
     onDeleteScript: (id: string) => void;
     onArchiveScript: (id: string, isArchived: boolean) => void;
     onManageQueue: () => void;
-    isAutomationRunning: boolean;
+    onStopAutomation: () => void;
+    onResumeAutomation: () => void;
+    automationStatus: 'running' | 'paused' | 'stopped';
     favoriteTitles: FavoriteTitle[];
     onSelectFavoriteTitle: (title: string, plot: string) => void;
     onDeleteFavoriteTitle: (id: string) => void;
@@ -29,6 +31,7 @@ const getStatusIcon = (status: GenerationState) => {
         case GenerationState.GENERATING_CHAPTERS:
             return <div title="In Progress" className="animate-spin text-yellow-400"><RefreshIcon /></div>;
         case GenerationState.PAUSED:
+             return <div title="Paused" className="text-yellow-400"><StopIcon /></div>;
         case GenerationState.ERROR:
              return <div title="Stopped / Error" className="text-error"><StopIcon /></div>;
         case GenerationState.AWAITING_HOOK_SELECTION:
@@ -93,13 +96,36 @@ const ScriptList: React.FC<{
 const LibrarySidebar: React.FC<LibrarySidebarProps> = (props) => {
     const { 
         scripts, archivedScripts, activeScriptId, onSelectScript, onDeleteScript, onArchiveScript,
-        onManageQueue, isAutomationRunning, favoriteTitles, onSelectFavoriteTitle,
-        onDeleteFavoriteTitle, showArchived, setShowArchived, isMobile, onClose
+        onManageQueue, onStopAutomation, onResumeAutomation, automationStatus,
+        favoriteTitles, onSelectFavoriteTitle, onDeleteFavoriteTitle, 
+        showArchived, setShowArchived, isMobile, onClose
     } = props;
     
     const handleDeleteFavorite = (e: React.MouseEvent, id: string) => {
         e.stopPropagation();
         onDeleteFavoriteTitle(id);
+    };
+
+    const AutomationButton = () => {
+        if (automationStatus === 'running') {
+            return (
+                 <button onClick={onStopAutomation} className="w-full mb-4 bg-error text-white font-bold py-2 rounded-lg text-sm hover:bg-opacity-90 flex items-center justify-center gap-2">
+                    <StopIcon /> Stop Automation
+                 </button>
+            );
+        }
+        if (automationStatus === 'paused') {
+            return (
+                <button onClick={onResumeAutomation} className="w-full mb-4 bg-green-500 text-white font-bold py-2 rounded-lg text-sm hover:bg-opacity-90 flex items-center justify-center gap-2">
+                   <PlayIcon /> Resume Automation
+                </button>
+           );
+        }
+        return (
+            <button onClick={onManageQueue} className="w-full mb-4 bg-secondary text-on-primary font-bold py-2 rounded-lg text-sm hover:bg-opacity-90">
+                Manage Queue
+            </button>
+        );
     };
     
     return (
@@ -109,13 +135,7 @@ const LibrarySidebar: React.FC<LibrarySidebarProps> = (props) => {
                 {isMobile && <button onClick={onClose}><XIcon/></button>}
              </div>
              
-             <button
-                onClick={onManageQueue}
-                disabled={isAutomationRunning}
-                className="w-full mb-4 bg-secondary text-on-primary font-bold py-2 rounded-lg text-sm hover:bg-opacity-90 transition-opacity disabled:bg-gray-600"
-             >
-                {isAutomationRunning ? 'Automation Running...' : 'Manage Queue'}
-             </button>
+             <AutomationButton />
             
             <div className="flex-grow overflow-y-auto pr-2 min-h-0 space-y-4">
                 <ScriptList

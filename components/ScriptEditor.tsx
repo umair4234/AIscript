@@ -17,33 +17,36 @@ interface ScriptEditorProps {
   onStopGeneration: () => void;
   onResumeGeneration: () => void;
   outline: ScriptOutline | null;
+  isAutomationActive: boolean;
 }
 
-const HookSelector: React.FC<Pick<ScriptEditorProps, 'hooks' | 'selectedHookIndex' | 'state' | 'onApproveHook' | 'onRegenerateHooks' | 'onSelectHook'>> = ({
-    hooks, selectedHookIndex, state, onApproveHook, onRegenerateHooks, onSelectHook
+const HookSelector: React.FC<Pick<ScriptEditorProps, 'hooks' | 'selectedHookIndex' | 'state' | 'onApproveHook' | 'onRegenerateHooks' | 'onSelectHook' | 'isAutomationActive'>> = ({
+    hooks, selectedHookIndex, state, onApproveHook, onRegenerateHooks, onSelectHook, isAutomationActive
 }) => {
     const isGenerating = state === GenerationState.GENERATING_HOOK;
     return (
         <div className="flex flex-col h-full">
             <div className="flex justify-between items-center mb-2 flex-shrink-0">
                  <h2 className="text-xl font-bold text-primary">Choose a Hook</h2>
-                 <div className="flex items-center gap-2">
-                    <button 
-                        onClick={onRegenerateHooks}
-                        disabled={isGenerating}
-                        className="flex items-center gap-2 px-3 py-2 bg-surface hover:bg-gray-700 rounded-md text-sm disabled:opacity-50"
-                    >
-                        <RefreshIcon />
-                        Regenerate
-                    </button>
-                    <button
-                        onClick={onApproveHook}
-                        disabled={selectedHookIndex === null}
-                        className="px-4 py-2 bg-secondary text-on-primary font-bold rounded-lg hover:bg-opacity-90 transition-opacity disabled:bg-gray-600 disabled:cursor-not-allowed text-sm"
-                    >
-                        Approve & Write
-                    </button>
-                 </div>
+                 {!isAutomationActive && (
+                    <div className="flex items-center gap-2">
+                        <button 
+                            onClick={onRegenerateHooks}
+                            disabled={isGenerating}
+                            className="flex items-center gap-2 px-3 py-2 bg-surface hover:bg-gray-700 rounded-md text-sm disabled:opacity-50"
+                        >
+                            <RefreshIcon />
+                            Regenerate
+                        </button>
+                        <button
+                            onClick={onApproveHook}
+                            disabled={selectedHookIndex === null}
+                            className="px-4 py-2 bg-secondary text-on-primary font-bold rounded-lg hover:bg-opacity-90 transition-opacity disabled:bg-gray-600 disabled:cursor-not-allowed text-sm"
+                        >
+                            Approve & Write
+                        </button>
+                    </div>
+                 )}
             </div>
             <div className="flex-grow space-y-3 overflow-y-auto p-2 min-h-0">
                 {hooks.map((hook, index) => (
@@ -55,6 +58,7 @@ const HookSelector: React.FC<Pick<ScriptEditorProps, 'hooks' | 'selectedHookInde
                                 checked={selectedHookIndex === index}
                                 onChange={() => onSelectHook(index)}
                                 className="mt-1 h-4 w-4 border-gray-500 bg-gray-700 text-primary focus:ring-primary"
+                                disabled={isAutomationActive}
                             />
                             <p className="ml-3 text-on-surface whitespace-pre-wrap">{hook.split('"But before')[0]}</p>
                         </div>

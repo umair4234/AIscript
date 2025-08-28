@@ -5,6 +5,7 @@ interface ScriptInputFormProps {
   onSubmit: (data: { title: string; duration: number; plot: string; }) => void;
   onAddToQueue: (data: Omit<AutomationJob, 'id'>) => void;
   isGenerating: boolean;
+  isAutomationActive: boolean;
   title: string;
   duration: number;
   plot: string;
@@ -21,6 +22,7 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
     onSubmit, 
     onAddToQueue, 
     isGenerating, 
+    isAutomationActive,
     title,
     duration,
     plot,
@@ -43,6 +45,8 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
     }
   };
 
+  const isDisabled = isGenerating || isAutomationActive;
+
   return (
     <div className="bg-surface p-6 rounded-lg shadow-lg">
       <h2 className="text-xl font-bold mb-4 text-primary">Video Details</h2>
@@ -54,10 +58,10 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
             id="title"
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
-            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary"
+            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary disabled:opacity-50"
             placeholder="e.g., They Left Their Dog in a Flood..."
             required
-            disabled={isGenerating}
+            disabled={isDisabled}
           />
         </div>
         <div>
@@ -67,10 +71,10 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
             id="duration"
             value={duration}
             onChange={(e) => onDurationChange(parseInt(e.target.value, 10))}
-            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary"
+            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary disabled:opacity-50"
             min="1"
             required
-            disabled={isGenerating}
+            disabled={isDisabled}
           />
         </div>
         <div>
@@ -80,9 +84,9 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
             value={plot}
             onChange={(e) => onPlotChange(e.target.value)}
             rows={4}
-            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary"
+            className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary disabled:opacity-50"
             placeholder="Any specific ideas for the story?"
-            disabled={isGenerating}
+            disabled={isDisabled}
           />
         </div>
 
@@ -93,8 +97,8 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
                     id="style"
                     value={selectedStyleId}
                     onChange={(e) => onStyleChange(e.target.value)}
-                    className="flex-grow bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary"
-                    disabled={isGenerating}
+                    className="flex-grow bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary disabled:opacity-50"
+                    disabled={isDisabled}
                 >
                     <option value="default">Default Style</option>
                     {styles.map(style => (
@@ -104,8 +108,8 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
                 <button
                     type="button"
                     onClick={onManageStyles}
-                    className="px-4 py-2 bg-gray-600 text-on-surface font-semibold rounded-lg hover:bg-gray-500 text-sm"
-                    disabled={isGenerating}
+                    className="px-4 py-2 bg-gray-600 text-on-surface font-semibold rounded-lg hover:bg-gray-500 text-sm disabled:opacity-50"
+                    disabled={isDisabled}
                 >
                     Manage
                 </button>
@@ -119,7 +123,7 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
                     id="queue-mode"
                     checked={isQueueMode}
                     onChange={(e) => setIsQueueMode(e.target.checked)}
-                    disabled={isGenerating}
+                    disabled={isDisabled}
                     className="h-4 w-4 rounded border-gray-500 bg-gray-700 text-primary focus:ring-primary"
                 />
                 <span className="ml-2 text-on-surface-secondary">Add to Queue</span>
@@ -127,7 +131,7 @@ const ScriptInputForm: React.FC<ScriptInputFormProps> = ({
         </div>
         <button
           type="submit"
-          disabled={isGenerating || !title || duration < 1}
+          disabled={isDisabled || !title || duration < 1}
           className="w-full bg-primary text-on-primary font-bold py-3 rounded-lg hover:bg-opacity-90 transition-opacity disabled:bg-gray-600 disabled:cursor-not-allowed"
         >
           {isGenerating ? 'Generating...' : (isQueueMode ? 'Add to Automation Queue' : 'Generate Outline')}

@@ -7,7 +7,7 @@ interface AutomationSetupModalProps {
   onClose: () => void;
   currentQueue: AutomationJob[];
   onSaveQueue: (queue: AutomationJob[]) => void;
-  onStartAutomation: () => void;
+  onStartAutomation: (queue: AutomationJob[]) => void;
   favoriteTitles: FavoriteTitle[];
 }
 
@@ -73,7 +73,7 @@ const AutomationSetupModal: React.FC<AutomationSetupModalProps> = ({
   
   const handleStart = () => {
     onSaveQueue(queue);
-    onStartAutomation();
+    onStartAutomation(queue);
     onClose();
   }
 

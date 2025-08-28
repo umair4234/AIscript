@@ -38,6 +38,8 @@ export interface ScriptRecord {
     title: string;
     plot: string;
     outline: ScriptOutline | null;
+    // FIX: Add rawOutlineText to store the raw text of the outline, allowing for editing and re-parsing.
+    rawOutlineText?: string;
     hook: string;
     finalScript: ChapterContent[];
     status: GenerationState;

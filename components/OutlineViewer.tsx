@@ -8,11 +8,12 @@ interface OutlineViewerProps {
   onApprove?: () => void;
   onSaveEditedOutline: (newText: string) => void;
   isGenerating?: boolean;
+  isAutomationActive: boolean;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
 
-const OutlineViewer: React.FC<OutlineViewerProps> = ({ outline, rawOutlineText, onApprove, onSaveEditedOutline, isGenerating, isCollapsed, onToggleCollapse }) => {
+const OutlineViewer: React.FC<OutlineViewerProps> = ({ outline, rawOutlineText, onApprove, onSaveEditedOutline, isGenerating, isAutomationActive, isCollapsed, onToggleCollapse }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(rawOutlineText);
   const [hasCopied, setHasCopied] = useState(false);
@@ -49,7 +50,7 @@ const OutlineViewer: React.FC<OutlineViewerProps> = ({ outline, rawOutlineText, 
             <button onClick={handleCopy} className="text-on-surface-secondary hover:text-primary transition-colors p-1" aria-label="Copy outline">
                 {hasCopied ? <CheckIcon /> : <CopyIcon />}
             </button>
-            {!isEditing && onApprove && (
+            {!isEditing && onApprove && !isAutomationActive && (
               <button
                 onClick={(e) => {
                     e.stopPropagation();
@@ -61,9 +62,11 @@ const OutlineViewer: React.FC<OutlineViewerProps> = ({ outline, rawOutlineText, 
                 Approve & Gen. Hooks
               </button>
             )}
-            <button onClick={() => setIsEditing(!isEditing)} className="text-sm px-3 py-2 bg-surface hover:bg-gray-700 rounded-md">
-                {isEditing ? 'Cancel' : 'Edit'}
-            </button>
+            {!isAutomationActive && (
+              <button onClick={() => setIsEditing(!isEditing)} className="text-sm px-3 py-2 bg-surface hover:bg-gray-700 rounded-md">
+                  {isEditing ? 'Cancel' : 'Edit'}
+              </button>
+            )}
         </div>
     </div>
   );
