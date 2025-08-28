@@ -110,7 +110,7 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
   const fullScriptText = useMemo(() => {
     if (!approvedHook && finalScript.length === 0) return '';
     let script = approvedHook;
-    finalScript.forEach(chapter => {
+    finalScript.sort((a, b) => a.chapter - b.chapter).forEach(chapter => {
       script += `\n\n\nChapter ${chapter.chapter}\n\n`;
       script += chapter.content;
     });
@@ -182,7 +182,7 @@ const ScriptEditor: React.FC<ScriptEditorProps> = (props) => {
                 <p className="whitespace-pre-wrap font-bold italic text-secondary">{approvedHook.split('"But before')[0]}</p>
                 <p className="whitespace-pre-wrap my-4 text-on-surface-secondary text-base">{`"But before${approvedHook.split('"But before')[1] || ''}`}</p>
 
-                {finalScript.map((chapter, index) => (
+                {finalScript.sort((a,b) => a.chapter - b.chapter).map((chapter, index) => (
                     <div key={chapter.chapter}>
                         <div className="flex justify-between items-center mt-6 mb-2">
                              <h3 className="text-xl font-bold text-secondary">Chapter {chapter.chapter}</h3>

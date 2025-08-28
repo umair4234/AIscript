@@ -358,7 +358,11 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
         let fullChapterText = '';
 
         try {
-            const prevContent = chapterNumber > 1 ? finalScript[chapterNumber - 2].content : '';
+            const prevContent = chapterNumber > 1 ? finalScript.find(c => c.chapter === chapterNumber - 1)!.content : '';
+            if (chapterNumber > 1 && prevContent === undefined) {
+                throw new Error(`Could not find content for the previous chapter (${chapterNumber - 1}) to regenerate from.`);
+            }
+
             const prompt = getChapterPrompt(chapterNumber, outline, approvedHook, prevContent, selectedStyle?.styleJson ?? null);
             
             await aiManager.generateStreamWithRotation(
@@ -410,7 +414,8 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
             }
             if (script.finalScript && script.finalScript.length > 0) {
                 setFinalScript(script.finalScript);
-                setState(GenerationState.COMPLETED);
+                const isComplete = script.outline && script.finalScript.length === script.outline.chapters.length;
+                setState(isComplete ? GenerationState.COMPLETED : GenerationState.PAUSED);
             }
         }
     };
@@ -448,6 +453,10 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
     };
     
     const handleResumeGeneration = () => {
+        // If generation stopped due to an error (e.g., all keys failed), reset the manager to try again from the start.
+        if (state === GenerationState.ERROR) {
+            aiManager.reset();
+        }
         const nextChapter = finalScript.length + 1;
         if (outline && nextChapter <= outline.chapters.length) {
             handleGenerateChapters(nextChapter);
@@ -458,7 +467,7 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
         GenerationState.GENERATING_OUTLINE, 
         GenerationState.GENERATING_HOOK, 
         GenerationState.GENERATING_CHAPTERS
-    ].includes(state), [state]);
+    ].includes(state) || regeneratingChapter !== null, [state, regeneratingChapter]);
     
     return (
          <div className="flex h-full w-full">
