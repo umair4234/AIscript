@@ -264,68 +264,96 @@ Use the following examples as a guide for the tone, structure, and emotional imp
 FINAL OUTPUT
 Please provide your response as a numbered list of 10 new video titles. Do not add any extra explanations.`;
 
-export const COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a list of successful video titles from competitor channels. Your task is to analyze the underlying patterns, emotional hooks, structure, and keywords that make these titles work. Then, generate a list of 10 new, original titles that use the same successful formula but are even more compelling and clickable. Go deeper than just mimicking the words; understand the *psychology* behind them.
+export const COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a list of successful video titles from competitor channels. Your task is to analyze the underlying patterns, emotional hooks, and structures of these titles, and then generate 10 new, original titles for the "Lily's Law" channel that capture the same viral essence.
 
-Here are the competitor titles you must analyze:
+## CORE CHANNEL CONCEPT: "Lily's Law"
+- **Heroes:** Lily (a compassionate 10-year-old girl) and her father, David (a skilled lawyer).
+- **Theme:** They rescue animals (primarily dogs) from tragic situations and use the law to bring villains to justice.
+- **Winning Title Structure:** The most successful titles follow a two-part formula:
+    1.  **Part 1: The Tragic Setup:** Describe the heartbreaking situation of the victim.
+    2.  **Part 2: The Unexpected Twist:** Introduce the heroes and the promise of a unique, justice-oriented resolution.
+
+## COMPETITOR TITLES FOR ANALYSIS
+"""
 {competitor_titles}
+"""
 
-YOUR TASK:
-Generate 10 new titles that capture the same viral essence as the examples provided.
-
-FINAL OUTPUT RULES:
-- Your output must be a numbered list of 10 new video titles.
-- Do not add any extra text, explanations, or analysis in your final response. Just the list.`;
-
-export const PLOT_IDEA_PROMPT_TEMPLATE = `Based on the following viral YouTube video title, generate a short, compelling plot idea (2-3 sentences). The plot should expand on the premise of the title and set up the core conflict and emotional journey. The story is for a channel called 'Lily's Law' featuring a 10-year-old girl, Lily, and her lawyer father, David, who rescue animals and seek justice.
-
-VIDEO TITLE:
-"{title}"
-
-FINAL OUTPUT:
-Provide ONLY the 2-3 sentence plot idea. Do not add any extra text, titles, or explanations.`;
-
-export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a successful video title. Your task is to generate 5 new, original titles that use the same successful formula but are even more compelling. They must be about dogs and follow the "Lily's Law" theme (a little girl and her lawyer dad seeking justice for dogs).
-
-SUCCESSFUL TITLE TO EMULATE:
-"{title}"
-
-YOUR TASK:
-Generate 5 new titles that capture the same viral essence.
-
-FINAL OUTPUT RULES:
-- Your output must be a numbered list of 5 new video titles.
-- Do not add any extra text, explanations, or analysis in your final response. Just the list.`;
-
-export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are an expert YouTube title creator for a viral storytelling channel. I will provide you with a full script. Your task is to read and understand the story, then generate 5 unique, compelling, and emotionally resonant titles that create intrigue and promise a satisfying story of justice for an animal victim.
-
-Follow the winning title formula:
-1.  **Two-Part Structure:** Start with the tragic setup (the animal's situation) and follow with an unexpected twist (the introduction of the heroes and the promise of justice).
-2.  **High-Emotion Keywords:** Use words like "Abandoned," "Left to Die," "Chained," "Ignored," but also "Then a Little Girl Saw," "Until Her Lawyer Dad Found Proof," "They Didn't Expect a 10-Year-Old to Sue Them."
-3.  **Create a Story Gap:** The title must make the viewer ask a question they need answered by watching.
-
-## FULL SCRIPT TEXT
-{script_text}
+## YOUR STRATEGIC PROCESS
+1.  **Identify Patterns:** Analyze the competitor titles. What words do they use (e.g., "Abandoned," "Left," "But," "Until")? What is the common sentence structure? Who are the typical victims and villains?
+2.  **Deconstruct the Formula:** Break down how they create a "story gap." How do they present a problem in the first half and hint at an unexpected solution in the second?
+3.  **Synthesize for "Lily's Law":** Take your findings and apply them to the "Lily's Law" concept. Create 10 new titles that feel like they belong on the same trending page as the competitor titles, but are unique and centered around Lily and her lawyer father.
 
 ## FINAL OUTPUT
-Your output must be a valid JSON array of 5 strings. Do NOT wrap the JSON in markdown code blocks. Your entire response must be ONLY the raw JSON, starting with \`[\` and ending with \`]\`.
-`;
+Please provide your response as a numbered list of 10 new video titles. Do not add any other explanations or your analysis. Just the titles.`;
 
-export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube scriptwriter. I will provide a video title and the full video script. Your task is to generate a perfectly formatted YouTube video description.
+export const PLOT_IDEA_PROMPT_TEMPLATE = `You are a creative storyteller. Based on the following YouTube video title, generate a brief, one-paragraph plot idea (3-4 sentences) that would be a good story for the "Lily's Law" channel.
 
-## VIDEO TITLE
-{title}
+**Video Title:** "{title}"
 
-## FULL SCRIPT TEXT
+Remember the core elements of the channel: A 10-year-old girl named Lily and her lawyer father, David, rescue an animal and seek justice for them. The story should have an emotional arc: tragedy -> hope -> justice.
+
+**Output:** Provide only the one-paragraph plot idea.`;
+
+export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a YouTube title expert. I will give you one successful title. Your task is to generate 5 new titles that are very similar in structure, tone, and emotional hook, but with different specific details.
+
+**Original Title:** "{title}"
+
+**Output:** Provide a numbered list of 5 new, similar titles.`;
+
+export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are a YouTube title expert. I will provide you with the full text of a video script. Your task is to read the script, understand its core story and emotional beats, and then generate 5 compelling, viral-style titles that accurately reflect the video's content. The titles should follow the "Tragic Setup + Unexpected Twist" formula where possible.
+
+**Script Text:**
+"""
 {script_text}
+"""
 
-## DESCRIPTION FORMAT (Strict Requirement)
-Your output must follow this structure exactly:
-1.  The full video title on the first line.
-2.  An empty line.
-3.  A concise, engaging 2-3 sentence summary of the video's story.
-4.  An empty line.
-5.  Exactly three relevant hashtags, each on its own line (e.g., #dogrescue, #animalheroes, #heartwarmingstory).
+**Output:** Provide your response as a valid JSON array of 5 strings. Do not add any other text. Your response must be ONLY the raw JSON.`;
+
+export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube SEO and copywriter. I will provide you with a video title and the full script. Your task is to write a compelling, SEO-friendly YouTube video description.
+
+**Video Title:** {title}
+**Script Text:**
+"""
+{script_text}
+"""
+
+**Instructions:**
+1.  **Hook:** Start with a 1-2 sentence hook that rephrases the title and grabs the reader's attention.
+2.  **Summary:** Write a 3-4 sentence paragraph that summarizes the main story arc of the video without giving away the final resolution. Create intrigue.
+3.  **Call to Action:** Include a call to subscribe to the channel and comment on the story.
+4.  **Keywords:** Do not include a list of keywords or hashtags.
+
+**Output:** Provide only the description text.`;
+
+export const GENERATE_TITLES_FROM_IDEA_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist, renowned for your ability to transform a simple story idea into a list of 10 irresistible, viral-style video titles. You are working for the "Lily's Law" channel, which has a very specific and successful formula.
+
+## CORE CHANNEL FORMULA ("Lily's Law")
+- **Heroes:** Lily (a compassionate 10-year-old girl) and her father, David (a skilled lawyer).
+- **Theme:** They rescue animals (primarily dogs) from tragic situations and use the law to bring villains to justice.
+- **Winning Title Structure:** Every title MUST follow a two-part structure:
+    1.  **Part 1: The Tragic Setup:** Describe the heartbreaking situation of the victim.
+    2.  **Part 2: The Unexpected Twist:** Introduce the heroes (the "little girl," "lawyer's daughter," "her dad") and the promise of a unique, justice-oriented resolution.
+
+## YOUR TASK
+I will provide you with a raw, detailed story idea. Your task is to deeply analyze this idea and generate 10 video titles that are not just summaries, but are crafted to be top-1% viral hits by applying the channel's formula.
+
+## THE STORY IDEA
+"""
+{story_idea}
+"""
+
+## YOUR STRATEGIC PROCESS (MANDATORY)
+1.  **Deconstruct the Idea:** Read the story idea carefully. Identify the key characters (the victim, the villain), the core conflict, the emotional stakes, and the setting.
+2.  **Isolate the "Tragic Setup":** Find the most heartbreaking and emotionally resonant part of the story's beginning. This will be the first half of your titles. Use high-emotion keywords like "Abandoned," "Left to Die," "Trapped," "Kidnapped," "Chained."
+3.  **Identify the "Unexpected Twist":** Find the element that introduces the heroes (Lily and David) and the unique "legal justice" angle. How does a 10-year-old girl or her lawyer father completely change the situation in a way no one would expect? This is the second half of your titles.
+4.  **Craft 10 Titles:** Combine the "Tragic Setup" and the "Unexpected Twist" into 10 unique, compelling titles. Vary the wording but always adhere to the core formula. Create a "story gap" that makes the viewer desperate to know how the twist resolves the setup.
+
+## EXAMPLE ANALYSIS
+- **Idea:** "A rich man gets angry at his old dog for making a mess in his limo and abandons him on the side of the road. But a girl sees it happen, and her dad happens to be the district attorney."
+- **Tragic Setup:** "Rich Man Threw His Old Dog Out of a Limo"
+- **Unexpected Twist:** "But He Didn't Know a Little Girl's Dad Was the District Attorney."
+- **Final Title:** "Rich Man Threw His Old Dog Out of a Limo, But He Didn't Know a Little Girl's Dad Was the District Attorney."
 
 ## FINAL OUTPUT
-Provide ONLY the raw text for the description. Do not add any extra explanations or titles like "Description:".
+Please provide your response as a numbered list of 10 new video titles based on the provided story idea. Do not add any other explanations or introductory text.
 `;

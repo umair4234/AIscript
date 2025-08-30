@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AIManager } from '../services/aiService';
-import { getCompetitorAnalysisTitlePrompt, getDefaultTitlePrompt, getPlotIdeaPrompt, getSimilarTitlesPrompt } from '../services/promptService';
+import { getCompetitorAnalysisTitlePrompt, getDefaultTitlePrompt, getPlotIdeaPrompt, getSimilarTitlesPrompt, getTitlesFromIdeaPrompt } from '../services/promptService';
 import * as storage from '../services/storageService';
 import { FavoriteTitle } from '../types';
 import { ArrowLeftIcon, LightbulbIcon, SparklesIcon, StarIcon, TrashIcon } from './Icons';
@@ -15,6 +15,7 @@ interface TitleStudioProps {
 
 const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGenAI, geminiKeys, groqKeys }) => {
     const [competitorTitles, setCompetitorTitles] = useState('');
+    const [storyIdea, setStoryIdea] = useState('');
     const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
     const [favoriteTitles, setFavoriteTitles] = useState<FavoriteTitle[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -37,9 +38,12 @@ const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGen
         setGeneratedTitles([]);
         setPlotIdeas({});
         let fullText = '';
-        const prompt = competitorTitles.trim()
-            ? getCompetitorAnalysisTitlePrompt(competitorTitles)
-            : getDefaultTitlePrompt();
+        
+        const prompt = storyIdea.trim()
+            ? getTitlesFromIdeaPrompt(storyIdea)
+            : competitorTitles.trim()
+                ? getCompetitorAnalysisTitlePrompt(competitorTitles)
+                : getDefaultTitlePrompt();
         
         try {
             await aiManager.generateStreamWithRotation(
@@ -137,13 +141,30 @@ const TitleStudio: React.FC<TitleStudioProps> = ({ onBack, onUseTitle, googleGen
                 {/* Left Side: Input & Favorites */}
                 <div className="flex flex-col gap-6">
                     <div className="bg-surface p-6 rounded-lg shadow-lg">
-                        <label htmlFor="competitor-titles" className="text-lg font-semibold text-on-surface mb-2 block">Analyze Competitor Titles (Optional)</label>
-                        <p className="text-sm text-on-surface-secondary mb-3">Paste titles from other channels (one per line) to match their viral style. Leave blank to generate fresh ideas.</p>
+                        <label htmlFor="story-idea" className="text-lg font-semibold text-on-surface mb-2 block">Generate from Your Idea</label>
+                        <p className="text-sm text-on-surface-secondary mb-3">Describe your story, plot, or just a simple scene. The AI will generate titles based on your unique idea. This will be used instead of competitor titles if filled.</p>
+                        <textarea
+                            id="story-idea"
+                            value={storyIdea}
+                            onChange={(e) => setStoryIdea(e.target.value)}
+                            rows={8}
+                            className="w-full bg-brand-bg border border-gray-600 rounded-md p-3 text-on-surface focus:ring-primary focus:border-primary font-mono text-sm"
+                            placeholder="e.g., A little girl finds a dog tied up in a snowy forest. Her dad is a lawyer, and they discover the man who did it is the same man her dad is prosecuting in a big case."
+                        />
+
+                        <div className="flex items-center gap-4 my-6">
+                            <hr className="flex-grow border-gray-600"/>
+                            <span className="text-on-surface-secondary font-semibold">OR</span>
+                            <hr className="flex-grow border-gray-600"/>
+                        </div>
+
+                        <label htmlFor="competitor-titles" className="text-lg font-semibold text-on-surface mb-2 block">Analyze Competitor Titles</label>
+                        <p className="text-sm text-on-surface-secondary mb-3">Paste titles from other channels (one per line) to match their viral style. Leave both text areas blank to generate fresh ideas.</p>
                         <textarea
                             id="competitor-titles"
                             value={competitorTitles}
                             onChange={(e) => setCompetitorTitles(e.target.value)}
-                            rows={8}
+                            rows={5}
                             className="w-full bg-brand-bg border border-gray-600 rounded-md p-3 text-on-surface focus:ring-primary focus:border-primary font-mono text-sm"
                             placeholder="e.g., They Abandoned Their Dog, But Didn't Know a Lawyer's Daughter Was Watching."
                         />

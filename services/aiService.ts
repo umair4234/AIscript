@@ -125,7 +125,12 @@ export class AIManager {
 
           for await (const chunk of response) {
             if (signal.aborted) throw new DOMException('Aborted by user', 'AbortError');
-            onChunk(chunk.text);
+            const text = chunk.text;
+            // FIX: Add a check to ensure chunk.text is not undefined before calling onChunk.
+            // This prevents "undefined" from being concatenated into the full response string.
+            if (text) {
+                onChunk(text);
+            }
           }
           return; // Success, exit the function
         } catch (error: any) {
