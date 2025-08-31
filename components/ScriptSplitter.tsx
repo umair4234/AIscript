@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ArrowLeftIcon, CheckIcon, CopyIcon, SparklesIcon } from './Icons';
 import { AIManager } from '../services/aiService';
-import { getTitlesFromScriptPrompt, getDescriptionPrompt } from '../services/promptService';
+import { getTitlesFromScriptPrompt, getDescriptionPrompt, getTitlesFromExistingTitlePrompt } from '../services/promptService';
+import TitleGenerationModal from './TitleGenerationModal';
 
 interface ScriptSplitterProps {
     initialScript: string;
@@ -60,6 +61,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
     const [searchCount, setSearchCount] = useState<number | null>(null);
 
     // State for Title & Description Studio
+    const [isTitleModalOpen, setIsTitleModalOpen] = useState(false);
     const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
     const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
     const [finalDescription, setFinalDescription] = useState<string | null>(null);
@@ -177,7 +179,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
     };
 
     // Handlers for Title & Description Studio
-    const handleGenerateTitles = async () => {
+    const handleGenerateTitles = async (optionalTitle?: string) => {
         setIsLoadingTitles(true);
         setAiError(null);
         setGeneratedTitles([]);
@@ -185,18 +187,32 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
         setFinalDescription(null);
         let fullText = '';
         try {
-            const scriptExcerpt = script.trim().split(/\s+/).slice(0, 1000).join(' ');
-            const prompt = getTitlesFromScriptPrompt(scriptExcerpt);
+            const prompt = optionalTitle
+                ? getTitlesFromExistingTitlePrompt(optionalTitle)
+                : getTitlesFromScriptPrompt(script.trim().split(/\s+/).slice(0, 1000).join(' '));
+            
             await aiManager.generateStreamWithRotation(
                 prompt,
                 (chunk) => { fullText += chunk; },
                 () => {},
                 new AbortController().signal
             );
-            const titles = JSON.parse(fullText.trim());
+            
+            let jsonString = fullText.trim();
+            const startIndex = jsonString.indexOf('[');
+            const endIndex = jsonString.lastIndexOf(']');
+            
+            if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                jsonString = jsonString.substring(startIndex, endIndex + 1);
+            } else {
+                throw new Error("No valid JSON array found in the AI response.");
+            }
+
+            const titles = JSON.parse(jsonString);
             setGeneratedTitles(titles);
+            setIsTitleModalOpen(false);
         } catch (err: any) {
-            setAiError(err.message);
+            setAiError(`Failed to parse titles. Error: ${err.message}. Raw AI Response: "${fullText}"`);
         } finally {
             setIsLoadingTitles(false);
         }
@@ -360,15 +376,15 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
                         <div className="flex justify-between items-center mb-3">
                             <h4 className="text-lg font-semibold text-on-surface">1. Generate Titles</h4>
                              <button
-                                onClick={handleGenerateTitles}
-                                disabled={isLoadingTitles || !script}
+                                onClick={() => setIsTitleModalOpen(true)}
+                                disabled={!script}
                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-bold rounded-lg hover:bg-opacity-90 text-sm disabled:bg-gray-600"
                             >
                                 <SparklesIcon className="h-5 w-5" />
                                 {generatedTitles.length > 0 ? 'Regenerate' : 'Generate'}
                             </button>
                         </div>
-                        {isLoadingTitles && <p className="text-on-surface-secondary animate-pulse text-center">Generating titles...</p>}
+                        {isLoadingTitles && !isTitleModalOpen && <p className="text-on-surface-secondary animate-pulse text-center">Generating titles...</p>}
                          <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
                             {generatedTitles.map((title, index) => (
                                 <button
@@ -468,6 +484,12 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
                     </div>
                 </div>
             )}
+            <TitleGenerationModal
+                isOpen={isTitleModalOpen}
+                onClose={() => setIsTitleModalOpen(false)}
+                onGenerate={handleGenerateTitles}
+                isLoading={isLoadingTitles}
+            />
         </div>
     );
 };

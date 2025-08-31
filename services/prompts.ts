@@ -233,45 +233,52 @@ Your entire output must be a single JSON object matching this structure precisel
 }
 `;
 
-export const DEFAULT_TITLE_PROMPT_TEMPLATE = `I want you to act as an expert YouTube title creator for a viral storytelling channel. Your specialty is crafting compelling, emotionally resonant titles that create intrigue and promise a satisfying story of justice, specifically about dogs.
-CORE NICHE CONCEPT: "Lily's Law"
-You are creating titles for a channel that follows a consistent set of heroic characters:
-The Heroes:
-Lily (10 years old): A deeply empathetic and brave girl who finds and rescues dogs in desperate situations.
-David (late 30s/early 40s): Lily's widowed father and a skilled lawyer who uses his legal expertise to fight for the dogs, bringing a unique "justice" angle to every story.
-The Core Theme: Each story begins with a heartbreaking case of dog abuse, neglect, or abandonment. The story then transforms into a tale of hope and justice as Lily and David intervene, using both compassion and the law to save the dog and hold the wrongdoers accountable. All stories MUST be about dogs.
-YOUR TASK
-Generate a list of 10 compelling, viral-style video titles for this YouTube channel. All titles must be about dogs.
-THE WINNING TITLE FORMULA
-Your titles must follow a specific, powerful formula designed to create an immediate emotional connection and a strong sense of curiosity.
-The Two-Part Structure: Every title must have two distinct parts:
-Part 1: The Tragic Setup: Start by describing the heartbreaking situation of the dog. This is the hook that generates sympathy.
-Part 2: The Unexpected Twist: Follow the setup with a twist that introduces our unique heroes (the "little girl," "lawyer's daughter," or "her dad") and the promise of justice. This is what makes the viewer click.
-Use High-Emotion Keywords: The titles should use strong, emotional words.
-For the setup: "Abandoned," "Left to Die," "Chained Up," "Thrown Out," "Neglected," "Crying for Help."
-For the twist: "But a Little Girl Saw Everything," "Until Her Lawyer Dad Found Proof," "They Didn't Expect a 10-Year-Old to Sue Them," "What She Found Changed Everything."
-Create a "Story Gap": The title must create a question in the viewer's mind. They should see the problem and be desperate to see the unique solution.
-EXAMPLES OF PERFECT TITLES (ABOUT DOGS ONLY)
-Use the following examples as a guide for the tone, structure, and emotional impact of the titles you generate:
-"They Left Their Old Dog at a Gas Station to Die, Then a Lawyer's Daughter Found Him."
-"Family Fled a Wildfire and Left Their Dog Chained Up, They Didn't Expect a 10-Year-Old to Sue Them."
-"He Was Returned to the Shelter for 'Being Sick', But a Little Girl Knew the Real Reason and Her Dad Had Proof."
-"Rich Man Threw His Old Dog Out of a Limo, But He Didn't Know a Little Girl's Dad Was the District Attorney."
-"Everyone Ignored the Crying Dog in the Hot Car, Until a 10-Year-Old Smashed the Window and Called Her Lawyer Dad."
-"His Owner Went to Jail and Left Him to Starve, But a Little Girl Found the Key to His Safe Hidden in His Collar."
-"They Sold Their House and Abandoned the Family Dog Inside, But They Didn't Know the Buyer Was a Judge's Daughter."
-"Puppy Mill Was Disguised as a Pet Store, Until a 10-Year-Old Girl Found the Hidden Basement."
+const MASTER_TITLE_FORMULA = `
+## THE VIRAL TITLE FORMULA (MANDATORY)
+You are an expert at creating viral YouTube titles for a specific storytelling niche. Your titles MUST follow a very strict, two-part formula. This is not a suggestion; it is a command.
+
+### Part 1: The Emotional Hook
+Start with a powerful, emotional hook. This can be:
+- A direct, heart-wrenching quote from a victim (often a child). Use single or double quotes.
+  - Examples: "Mom… It Hurts…", "Nobody Wants Me Here…", "Daddy… I Haven’t Eaten", "Please… Don’t Send Me Back,"
+- A vivid description of a tragic or mysterious situation.
+  - Examples: "A Forgotten Mansion Nobody Wanted", "A Woman Left on the Tracks to Die", "140°F Under the Hot Sun, 3 Little Golden Puppies Lie on the Road"
+
+### Part 2: The Hero & The Twist
+Immediately follow the hook with an em-dash (—) and then reveal the hero and the shocking twist or discovery.
+- **The Heroes:** The heroes are typically a compassionate figure paired with a K9/dog (e.g., "A Soldier and His K9," "A Veteran and His Dog," "A Cop and His K9") or a single heroic figure ("A Doctor," "A Billionaire").
+- **The Twist:** This part should create intense curiosity. Use phrases like: "Found What Nobody Dared to Imagine," "Discovered the Unthinkable," "Changed Everything," "Revealed a Hidden Truth," "Shattered Their Hearts."
+
+### NON-NEGOTIABLE RULES
+1.  **Strict Character Limit:** All titles MUST be under 100 characters.
+2.  **Follow the Formula:** Hook — Hero & Twist. Do not deviate.
+3.  **Use High-Emotion Language:** Words like "Whispered," "Sobbed," "Begged," "Shattered," "Unthinkable" are key.
+
+## EXAMPLES OF PERFECT TITLES (STUDY THESE CAREFULLY)
+- "Mom… It Hurts… The Twins Sobbed — Soldier and His K9 Found What Nobody Dared to Imagine"
+- "Nobody Wants Me Here…The Little Girl Whispered — Soldier and His K9 Discovered the Unthinkable"
+- "Little Girl Whispered, ‘Daddy… I Haven’t Eaten’ — What A Soldier and His K9 Found Changed Everything"
+- "Little Girl Whispers, ‘Save My Baby!’ — What a Cop and His Dog Did Will Shock You"
+- "Two Little Girls Whispered, ‘It Hurts… We’re Hungry’ — What the Doctor Found Changed Everything"
+- "Before His Execution, He Asked for One Last Thing — But the Dog Revealed a Hidden Truth…"
+- "A Forgotten Mansion Nobody Wanted — Until a Veteran and His Dog Uncovered a $200M Secret"
+- "HOA Tried to Destroy a Blind Veteran’s Dog — But the Truth Shocked the Entire Neighborhood"
+- "A Woman Left on the Tracks to Die — Until a Soldier and His K9 Delivered an Unexpected Ending"
+- "Too Weak to Hold Her Babies, She Fell in the Snow — Until a K9’s Rescue Changed Everything"
+- "Please… Don’t Send Me Back,’ the Little Girl Begged — But the K9 Stood Guard in the Scorching Heat"
+- "A PTSD Soldier and His K9 Saw a Girl Raise Her Hand — What They Found Shattered Their Hearts"
+- "Twin Girl Whispered, “We Were Bad… So Mom Left Us Here…” — But the K9 Wouldn’t Let That Be the End"
+`;
+
+export const DEFAULT_TITLE_PROMPT_TEMPLATE = `I want you to act as an expert YouTube title creator for a viral storytelling channel.
+YOUR TASK: Generate a list of 10 compelling, viral-style video titles.
+
+${MASTER_TITLE_FORMULA}
+
 FINAL OUTPUT
 Please provide your response as a numbered list of 10 new video titles. Do not add any extra explanations.`;
 
-export const COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a list of successful video titles from competitor channels. Your task is to analyze the underlying patterns, emotional hooks, and structures of these titles, and then generate 10 new, original titles for the "Lily's Law" channel that capture the same viral essence.
-
-## CORE CHANNEL CONCEPT: "Lily's Law"
-- **Heroes:** Lily (a compassionate 10-year-old girl) and her father, David (a skilled lawyer).
-- **Theme:** They rescue animals (primarily dogs) from tragic situations and use the law to bring villains to justice.
-- **Winning Title Structure:** The most successful titles follow a two-part formula:
-    1.  **Part 1: The Tragic Setup:** Describe the heartbreaking situation of the victim.
-    2.  **Part 2: The Unexpected Twist:** Introduce the heroes and the promise of a unique, justice-oriented resolution.
+export const COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist. I will provide you with a list of successful video titles from competitor channels. Your task is to analyze their underlying patterns and then generate 10 new, original titles that follow our channel's specific, mandatory formula.
 
 ## COMPETITOR TITLES FOR ANALYSIS
 """
@@ -279,50 +286,56 @@ export const COMPETITOR_ANALYSIS_TITLE_PROMPT_TEMPLATE = `You are a world-class 
 """
 
 ## YOUR STRATEGIC PROCESS
-1.  **Identify Patterns:** Analyze the competitor titles. What words do they use (e.g., "Abandoned," "Left," "But," "Until")? What is the common sentence structure? Who are the typical victims and villains?
-2.  **Deconstruct the Formula:** Break down how they create a "story gap." How do they present a problem in the first half and hint at an unexpected solution in the second?
-3.  **Synthesize for "Lily's Law":** Take your findings and apply them to the "Lily's Law" concept. Create 10 new titles that feel like they belong on the same trending page as the competitor titles, but are unique and centered around Lily and her lawyer father.
+1.  **Identify Patterns:** Analyze the competitor titles. What words, emotions, and structures do they use to create curiosity?
+2.  **Synthesize for Our Channel:** Take your findings and generate 10 new titles that strictly adhere to our channel's formula, detailed below.
+
+${MASTER_TITLE_FORMULA}
 
 ## FINAL OUTPUT
 Please provide your response as a numbered list of 10 new video titles. Do not add any other explanations or your analysis. Just the titles.`;
 
-export const PLOT_IDEA_PROMPT_TEMPLATE = `You are a creative storyteller. Based on the following YouTube video title, generate a brief, one-paragraph plot idea (3-4 sentences) that would be a good story for the "Lily's Law" channel.
+export const PLOT_IDEA_PROMPT_TEMPLATE = `You are a creative storyteller. Based on the following YouTube video title, generate a brief, one-paragraph plot idea (3-4 sentences).
 
 **Video Title:** "{title}"
 
-Remember the core elements of the channel: A 10-year-old girl named Lily and her lawyer father, David, rescue an animal and seek justice for them. The story should have an emotional arc: tragedy -> hope -> justice.
+Remember the core elements of the stories: A heroic figure (like a soldier, veteran, or doctor, often with a K9) discovers someone in a tragic situation and uncovers a deeper truth, leading to a just and heartwarming resolution.
 
 **Output:** Provide only the one-paragraph plot idea.`;
 
-export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a YouTube title expert. I will give you one successful title. Your task is to generate 5 new titles that are very similar in structure, tone, and emotional hook, but with different specific details.
+export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a YouTube title expert. I will give you one successful title. Your task is to generate 5 new titles that are very similar in structure, tone, and emotional hook, but with different specific details. All new titles must follow our channel's mandatory formula.
 
-**Original Title:** "{title}"
+## Original Title:
+"{title}"
 
-**Output:** Provide a numbered list of 5 new, similar titles.`;
+${MASTER_TITLE_FORMULA}
 
-export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are a YouTube title expert for a viral storytelling channel called "Lily's Law". The channel's theme is a 10-year-old girl (Lily) and her lawyer father who rescue animals (usually dogs) and seek justice.
+## FINAL OUTPUT
+Provide a numbered list of 5 new, similar titles.`;
 
-Your task is to read a script excerpt and generate 5 compelling, viral-style titles.
+export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are a YouTube title expert. Your task is to read a script excerpt and generate 5 compelling, viral-style titles that strictly adhere to the mandatory formula below.
 
-**MANDATORY RULES:**
-1.  **Title Length:** Every title MUST be under 100 characters. Aim for 85-95 characters for best performance. This is a strict, non-negotiable rule.
-2.  **Formula:** Titles MUST follow the "Tragic Setup + Unexpected Twist" formula.
-    -   Part 1: Describe a heartbreaking situation for an animal. Use emotional keywords like "Abandoned," "Chained," "Left to Die," "Ignored."
-    -   Part 2: Introduce the heroes ("a little girl," "her lawyer dad") and the promise of a unique, justice-oriented resolution.
-3.  **No Quotes:** Do not use quotation marks in the titles.
-
-**GOOD EXAMPLES (Follow this style and length):**
-- They Left Their Dog in a Flood, But a Little Girl's Lawyer Dad Ensured They Couldn't Escape Justice.
-- Abandoned Dog Was Chained in a Wildfire, Until a 10-Year-Old Sued the Owners Who Left Him.
-- Rich Man Threw His Dog Out of a Limo, But a Girl's Dad Was the District Attorney Who Saw It.
-- Everyone Ignored the Crying Dog in a Hot Car, Until a Girl Called Her Lawyer Dad to Press Charges.
-
-**Script Excerpt:**
+## Script Excerpt:
 """
 {script_text}
 """
 
-**Output:** Provide your response as a valid JSON array of 5 strings. Do not add any other text. Your response must be ONLY the raw JSON.`;
+${MASTER_TITLE_FORMULA}
+
+## FINAL OUTPUT
+Provide your response as a valid JSON array of 5 strings. Do not add any other text. Your response must be ONLY the raw JSON, starting with \`[\` and ending with \`]\`.`;
+
+export const GENERATE_TITLES_FROM_EXISTING_TITLE_PROMPT_TEMPLATE = `You are a YouTube title expert. Your task is to take an existing video title and generate 5 new, improved versions that strictly adhere to the mandatory viral formula below. The goal is to make them more clickbait, engaging, and curiosity-driven.
+
+## Existing Title:
+"""
+{existing_title}
+"""
+
+${MASTER_TITLE_FORMULA}
+
+## FINAL OUTPUT
+Provide your response as a valid JSON array of 5 strings. Do not add any other text. Your response must be ONLY the raw JSON, starting with \`[\` and ending with \`]\`.`;
+
 
 export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube SEO and copywriter for a channel called "Lily's Law". I will provide you with a video title and the full script. Your task is to write a compelling, SEO-friendly YouTube video description.
 
@@ -341,34 +354,17 @@ export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube S
 
 **Output:** Provide only the description text, formatted exactly as requested.`;
 
-export const GENERATE_TITLES_FROM_IDEA_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist, renowned for your ability to transform a simple story idea into a list of 10 irresistible, viral-style video titles. You are working for the "Lily's Law" channel, which has a very specific and successful formula.
-
-## CORE CHANNEL FORMULA ("Lily's Law")
-- **Heroes:** Lily (a compassionate 10-year-old girl) and her father, David (a skilled lawyer).
-- **Theme:** They rescue animals (primarily dogs) from tragic situations and use the law to bring villains to justice.
-- **Winning Title Structure:** Every title MUST follow a two-part structure:
-    1.  **Part 1: The Tragic Setup:** Describe the heartbreaking situation of the victim.
-    2.  **Part 2: The Unexpected Twist:** Introduce the heroes (the "little girl," "lawyer's daughter," "her dad") and the promise of a unique, justice-oriented resolution.
-
-## YOUR TASK
-I will provide you with a raw, detailed story idea. Your task is to deeply analyze this idea and generate 10 video titles that are not just summaries, but are crafted to be top-1% viral hits by applying the channel's formula.
+export const GENERATE_TITLES_FROM_IDEA_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist, renowned for your ability to transform a simple story idea into a list of 10 irresistible, viral-style video titles. You are working for a channel with a very specific and successful formula.
 
 ## THE STORY IDEA
 """
 {story_idea}
 """
 
-## YOUR STRATEGIC PROCESS (MANDATORY)
-1.  **Deconstruct the Idea:** Read the story idea carefully. Identify the key characters (the victim, the villain), the core conflict, the emotional stakes, and the setting.
-2.  **Isolate the "Tragic Setup":** Find the most heartbreaking and emotionally resonant part of the story's beginning. This will be the first half of your titles. Use high-emotion keywords like "Abandoned," "Left to Die," "Trapped," "Kidnapped," "Chained."
-3.  **Identify the "Unexpected Twist":** Find the element that introduces the heroes (Lily and David) and the unique "legal justice" angle. How does a 10-year-old girl or her lawyer father completely change the situation in a way no one would expect? This is the second half of your titles.
-4.  **Craft 10 Titles:** Combine the "Tragic Setup" and the "Unexpected Twist" into 10 unique, compelling titles. Vary the wording but always adhere to the core formula. Create a "story gap" that makes the viewer desperate to know how the twist resolves the setup.
+## YOUR TASK
+Deeply analyze this idea and generate 10 video titles that strictly follow the channel's mandatory formula.
 
-## EXAMPLE ANALYSIS
-- **Idea:** "A rich man gets angry at his old dog for making a mess in his limo and abandons him on the side of the road. But a girl sees it happen, and her dad happens to be the district attorney."
-- **Tragic Setup:** "Rich Man Threw His Old Dog Out of a Limo"
-- **Unexpected Twist:** "But He Didn't Know a Little Girl's Dad Was the District Attorney."
-- **Final Title:** "Rich Man Threw His Old Dog Out of a Limo, But He Didn't Know a Little Girl's Dad Was the District Attorney."
+${MASTER_TITLE_FORMULA}
 
 ## FINAL OUTPUT
 Please provide your response as a numbered list of 10 new video titles based on the provided story idea. Do not add any other explanations or introductory text.
