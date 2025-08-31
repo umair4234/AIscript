@@ -183,7 +183,13 @@ const App: React.FC = () => {
                             setIsMobileSidebarOpen={setIsMobileSidebarOpen}
                         />;
             case 'splitter':
-                return <ScriptSplitter initialScript={scriptForSplitter} onBack={handleBackToHome} />;
+                return <ScriptSplitter 
+                            initialScript={scriptForSplitter} 
+                            onBack={handleBackToHome} 
+                            googleGenAI={googleGenAI}
+                            geminiKeys={geminiKeys}
+                            groqKeys={groqKeys}
+                        />;
             case 'home':
             default:
                 return <ViewSelector onSelectView={(view) => handleNavigate(view)} />;

@@ -1,11 +1,16 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ArrowLeftIcon, CheckIcon, CopyIcon } from './Icons';
+import { ArrowLeftIcon, CheckIcon, CopyIcon, SparklesIcon } from './Icons';
+import { AIManager } from '../services/aiService';
+import { getTitlesFromScriptPrompt, getDescriptionPrompt } from '../services/promptService';
 
 interface ScriptSplitterProps {
     initialScript: string;
     initialSections?: string[];
     onSplit?: (sections: string[]) => void;
     onBack?: () => void;
+    googleGenAI: any;
+    geminiKeys: string[];
+    groqKeys: string[];
 }
 
 const ScriptStats: React.FC<{ text: string }> = ({ text }) => {
@@ -43,13 +48,31 @@ const ScriptStats: React.FC<{ text: string }> = ({ text }) => {
     );
 };
 
-const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialSections, onSplit, onBack }) => {
+const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialSections, onSplit, onBack, googleGenAI, geminiKeys, groqKeys }) => {
     const [script, setScript] = useState(initialScript);
     const [maxChars, setMaxChars] = useState(10000);
     const [keyword, setKeyword] = useState('');
     const [sections, setSections] = useState<string[]>(initialSections || []);
     const [copiedSections, setCopiedSections] = useState<Set<number>>(new Set());
     
+    // State for Script Cleaner feature
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchCount, setSearchCount] = useState<number | null>(null);
+
+    // State for Title & Description Studio
+    const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
+    const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+    const [finalDescription, setFinalDescription] = useState<string | null>(null);
+    const [isLoadingTitles, setIsLoadingTitles] = useState(false);
+    const [isLoadingDescription, setIsLoadingDescription] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
+    const [copiedContent, setCopiedContent] = useState<boolean>(false);
+
+    const aiManager = useMemo(() => {
+        return new AIManager(geminiKeys, groqKeys, googleGenAI);
+    }, [geminiKeys, groqKeys, googleGenAI]);
+
+
     useEffect(() => {
       setScript(initialScript);
     }, [initialScript]);
@@ -57,6 +80,58 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
     useEffect(() => {
       setSections(initialSections || []);
     }, [initialSections]);
+
+    // Memos for Script Cleaner
+    const chapterHeadingsCount = useMemo(() => {
+        if (!script) return 0;
+        const matches = script.match(/^Chapter \d+\s*$/gim);
+        return matches ? matches.length : 0;
+    }, [script]);
+    
+    const showThinkingCount = useMemo(() => {
+        if (!script) return 0;
+        return (script.match(/Show thinking/g) || []).length;
+    }, [script]);
+
+    // Handlers for Script Cleaner feature
+    const handleRemoveChapterHeadings = () => {
+        const cleanedScript = script.replace(/^(Chapter \d+\s*)\n?/gim, '');
+        setScript(cleanedScript);
+    };
+    
+    const handleRemoveShowThinking = () => {
+        const cleanedScript = script.replace(/Show thinking\n?/gi, '');
+        setScript(cleanedScript);
+    };
+    
+    const handleCleanSpacing = () => {
+        // Replace 3 or more newlines with just two, cleaning up extra empty lines
+        const cleanedScript = script.replace(/\n{3,}/g, '\n\n');
+        setScript(cleanedScript);
+    };
+
+
+    const escapeRegExp = (string: string) => {
+      return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+
+    const handleSearch = () => {
+        if (!searchTerm.trim()) {
+            setSearchCount(0);
+            return;
+        }
+        const count = (script.match(new RegExp(escapeRegExp(searchTerm), 'g')) || []).length;
+        setSearchCount(count);
+    };
+
+    const handleRemoveSearchTerm = () => {
+        if (!searchTerm.trim() || !searchCount) return;
+        const cleanedScript = script.replace(new RegExp(escapeRegExp(searchTerm), 'g'), '');
+        setScript(cleanedScript);
+        setSearchTerm('');
+        setSearchCount(null);
+    };
+
 
     const handleSplit = () => {
         let textToSplit = script.trim();
@@ -71,7 +146,6 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
             let chunk = textToSplit.substring(0, maxChars);
             let splitPoint = -1;
 
-            // Find the last sentence or paragraph break
             const lastPeriod = chunk.lastIndexOf('.');
             const lastQuestion = chunk.lastIndexOf('?');
             const lastExclamation = chunk.lastIndexOf('!');
@@ -79,7 +153,6 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
 
             splitPoint = Math.max(lastPeriod, lastQuestion, lastExclamation, lastNewline);
 
-            // Failsafe: if no punctuation found, or it's too early, just cut at the character limit
             if (splitPoint === -1) {
                 splitPoint = maxChars;
             }
@@ -103,6 +176,61 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
         setCopiedSections(prev => new Set(prev).add(index));
     };
 
+    // Handlers for Title & Description Studio
+    const handleGenerateTitles = async () => {
+        setIsLoadingTitles(true);
+        setAiError(null);
+        setGeneratedTitles([]);
+        setSelectedTitle(null);
+        setFinalDescription(null);
+        let fullText = '';
+        try {
+            const scriptExcerpt = script.trim().split(/\s+/).slice(0, 1000).join(' ');
+            const prompt = getTitlesFromScriptPrompt(scriptExcerpt);
+            await aiManager.generateStreamWithRotation(
+                prompt,
+                (chunk) => { fullText += chunk; },
+                () => {},
+                new AbortController().signal
+            );
+            const titles = JSON.parse(fullText.trim());
+            setGeneratedTitles(titles);
+        } catch (err: any) {
+            setAiError(err.message);
+        } finally {
+            setIsLoadingTitles(false);
+        }
+    };
+    
+    const handleGenerateDescription = async () => {
+        if (!selectedTitle) return;
+        setIsLoadingDescription(true);
+        setAiError(null);
+        let fullText = '';
+        try {
+            const prompt = getDescriptionPrompt(selectedTitle, script);
+            await aiManager.generateStreamWithRotation(
+                prompt,
+                (chunk) => { fullText += chunk; },
+                () => {},
+                new AbortController().signal
+            );
+            setFinalDescription(fullText.trim());
+        } catch (err: any) {
+            setAiError(err.message);
+        } finally {
+            setIsLoadingDescription(false);
+        }
+    };
+
+    const handleCopyFinal = () => {
+        if (!finalDescription) return;
+        navigator.clipboard.writeText(finalDescription);
+        setCopiedContent(true);
+        setTimeout(() => setCopiedContent(false), 2000);
+    };
+
+
     return (
         <div className="w-full flex-grow flex flex-col p-6 md:p-8 overflow-y-auto">
             <div className="flex items-center mb-4">
@@ -113,7 +241,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
                 )}
                 <div>
                     <h2 className="text-2xl font-bold text-primary">Script Splitting Tool</h2>
-                    <p className="text-on-surface-secondary">Paste your script, get stats, and split it into manageable sections.</p>
+                    <p className="text-on-surface-secondary">Paste your script, clean it, generate titles, get stats, and split it.</p>
                 </div>
             </div>
 
@@ -127,8 +255,166 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
                     readOnly={!!onSplit} // Make it readonly when used in the studio
                 />
             </div>
+
+            {/* Script Cleaner Section */}
+            <div className="my-6 bg-surface p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                     <h3 className="text-xl font-bold text-secondary">Script Cleaner</h3>
+                     <button onClick={handleCleanSpacing} className="px-4 py-2 bg-gray-600 text-on-surface font-semibold rounded-lg hover:bg-gray-500 text-sm">
+                        Clean Up Spacing
+                    </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Default Cleaner */}
+                    <div>
+                        <h4 className="text-lg font-semibold text-on-surface mb-2">Default Cleaner</h4>
+                        <div className="bg-brand-bg p-3 rounded-md space-y-2">
+                            {/* Chapter Headings */}
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold">Chapter Headings</p>
+                                    <p className="text-sm text-on-surface-secondary">e.g., "Chapter 1"</p>
+                                </div>
+                                {chapterHeadingsCount > 0 ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm bg-primary-variant text-primary font-bold px-2 py-1 rounded-full">{chapterHeadingsCount} found</span>
+                                        <button
+                                            onClick={handleRemoveChapterHeadings}
+                                            className="px-3 py-1 bg-error text-white font-semibold rounded-lg hover:bg-opacity-90 text-sm"
+                                        >
+                                            Remove All
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="text-sm text-on-surface-secondary">None found</span>
+                                )}
+                            </div>
+                             {/* Show thinking */}
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-semibold">"Show thinking"</p>
+                                    <p className="text-sm text-on-surface-secondary">Removes AI instruction text</p>
+                                </div>
+                                {showThinkingCount > 0 ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm bg-primary-variant text-primary font-bold px-2 py-1 rounded-full">{showThinkingCount} found</span>
+                                        <button
+                                            onClick={handleRemoveShowThinking}
+                                            className="px-3 py-1 bg-error text-white font-semibold rounded-lg hover:bg-opacity-90 text-sm"
+                                        >
+                                            Remove All
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <span className="text-sm text-on-surface-secondary">None found</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    {/* Custom Cleaner */}
+                    <div>
+                        <h4 className="text-lg font-semibold text-on-surface mb-2">Custom Cleaner</h4>
+                         <div className="bg-brand-bg p-3 rounded-md space-y-3">
+                            <p className="text-sm text-on-surface-secondary">Enter the exact text you want to find and remove from the script.</p>
+                            <textarea
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setSearchCount(null); // Reset count on new input
+                                }}
+                                rows={3}
+                                className="w-full bg-surface border border-gray-600 rounded-md p-2 text-on-surface focus:ring-primary focus:border-primary text-sm"
+                                placeholder="Paste text to remove here..."
+                            />
+                            <div className="flex justify-between items-center gap-2">
+                                <button
+                                    onClick={handleSearch}
+                                    disabled={!searchTerm.trim()}
+                                    className="flex-1 bg-gray-600 text-on-surface font-semibold py-2 rounded-lg hover:bg-gray-500 disabled:opacity-50"
+                                >
+                                    Find Occurrences
+                                </button>
+                                {searchCount !== null && (
+                                     <button
+                                        onClick={handleRemoveSearchTerm}
+                                        disabled={searchCount === 0}
+                                        className="flex-1 bg-error text-white font-semibold py-2 rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+                                    >
+                                       Remove All ({searchCount})
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <ScriptStats text={script} />
+
+            {/* Title & Description Studio */}
+             <div className="my-6 bg-surface p-4 rounded-lg">
+                <h3 className="text-xl font-bold text-yellow-400 mb-4">Title & Description Studio</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Title Generation */}
+                    <div>
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-lg font-semibold text-on-surface">1. Generate Titles</h4>
+                             <button
+                                onClick={handleGenerateTitles}
+                                disabled={isLoadingTitles || !script}
+                                className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-bold rounded-lg hover:bg-opacity-90 text-sm disabled:bg-gray-600"
+                            >
+                                <SparklesIcon className="h-5 w-5" />
+                                {generatedTitles.length > 0 ? 'Regenerate' : 'Generate'}
+                            </button>
+                        </div>
+                        {isLoadingTitles && <p className="text-on-surface-secondary animate-pulse text-center">Generating titles...</p>}
+                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                            {generatedTitles.map((title, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setSelectedTitle(title)}
+                                    className={`w-full text-left p-3 rounded-md transition-colors text-on-surface ${selectedTitle === title ? 'bg-primary-variant ring-2 ring-primary' : 'bg-brand-bg hover:bg-gray-800'}`}
+                                >
+                                    {title}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    {/* Description Generation */}
+                    <div>
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-lg font-semibold text-on-surface">2. Get Description</h4>
+                            <button
+                                onClick={handleGenerateDescription}
+                                disabled={!selectedTitle || isLoadingDescription}
+                                className="px-4 py-2 bg-secondary text-on-primary font-bold rounded-lg hover:bg-opacity-90 text-sm disabled:bg-gray-600"
+                            >
+                                {isLoadingDescription ? 'Generating...' : 'Generate Description'}
+                            </button>
+                        </div>
+                         {finalDescription ? (
+                            <div className="relative">
+                                <textarea
+                                    readOnly
+                                    value={finalDescription}
+                                    rows={8}
+                                    className="w-full bg-brand-bg border border-gray-600 rounded-md p-2 text-on-surface"
+                                />
+                                <button onClick={handleCopyFinal} className="absolute top-2 right-2 p-2 bg-gray-600 rounded-md hover:bg-gray-500">
+                                    {copiedContent ? <CheckIcon/> : <CopyIcon />}
+                                </button>
+                            </div>
+                         ) : (
+                             <div className="flex items-center justify-center h-full bg-brand-bg rounded-md">
+                                <p className="text-on-surface-secondary text-sm">Select a title to generate a description.</p>
+                            </div>
+                         )}
+                    </div>
+                </div>
+                {aiError && <p className="text-error text-sm mt-4 text-center">{aiError}</p>}
+            </div>
+
 
             <div className="bg-surface p-4 rounded-lg grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div>

@@ -716,7 +716,8 @@ const ScriptWriterView: React.FC<ScriptWriterViewProps> = ({ initialTitle, initi
                                     <button onClick={() => setPostGenTab('titles')} className={`flex-1 py-2 font-semibold ${postGenTab === 'titles' ? 'bg-primary-variant text-white' : 'hover:bg-gray-800'}`}>Titles & Desc.</button>
                                 </div>
                                 {postGenTab === 'script' && <div className="p-4 flex-grow overflow-y-auto"><ScriptEditor {...{ approvedHook, hooks, selectedHookIndex, finalScript, state, onApproveHook: handleApproveHook, onRegenerateHooks: () => setIsRegenHookModalOpen(true), onSelectHook: handleSelectHook, onGoToSplitter: () => {}, regeneratingChapter, onRegenerateChapter: handleRegenerateChapter, onStopGeneration: handleStopGeneration, onResumeGeneration: handleResumeGeneration, outline, isAutomationActive }} /></div>}
-                                {postGenTab === 'splitter' && <ScriptSplitter initialScript={finalScript.map(c => c.content).join('\n\n')} />}
+                                {/* FIX: Pass missing required props to ScriptSplitter */}
+                                {postGenTab === 'splitter' && <ScriptSplitter initialScript={finalScript.map(c => c.content).join('\n\n')} googleGenAI={googleGenAI} geminiKeys={geminiKeys} groqKeys={groqKeys} />}
                                 {postGenTab === 'titles' && <PostGenerationStudio script={storage.getScriptById(activeScriptId)!} fullScriptText={finalScript.map(c => c.content).join('\n\n')} onUpdateScript={handleUpdateScriptPostGen} aiManager={aiManager.current} />}
 
                             </div>

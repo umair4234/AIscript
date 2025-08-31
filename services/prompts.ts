@@ -300,16 +300,31 @@ export const GENERATE_SIMILAR_TITLES_PROMPT_TEMPLATE = `You are a YouTube title 
 
 **Output:** Provide a numbered list of 5 new, similar titles.`;
 
-export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are a YouTube title expert. I will provide you with the full text of a video script. Your task is to read the script, understand its core story and emotional beats, and then generate 5 compelling, viral-style titles that accurately reflect the video's content. The titles should follow the "Tragic Setup + Unexpected Twist" formula where possible.
+export const GENERATE_TITLES_FROM_SCRIPT_PROMPT_TEMPLATE = `You are a YouTube title expert for a viral storytelling channel called "Lily's Law". The channel's theme is a 10-year-old girl (Lily) and her lawyer father who rescue animals (usually dogs) and seek justice.
 
-**Script Text:**
+Your task is to read a script excerpt and generate 5 compelling, viral-style titles.
+
+**MANDATORY RULES:**
+1.  **Title Length:** Every title MUST be under 100 characters. Aim for 85-95 characters for best performance. This is a strict, non-negotiable rule.
+2.  **Formula:** Titles MUST follow the "Tragic Setup + Unexpected Twist" formula.
+    -   Part 1: Describe a heartbreaking situation for an animal. Use emotional keywords like "Abandoned," "Chained," "Left to Die," "Ignored."
+    -   Part 2: Introduce the heroes ("a little girl," "her lawyer dad") and the promise of a unique, justice-oriented resolution.
+3.  **No Quotes:** Do not use quotation marks in the titles.
+
+**GOOD EXAMPLES (Follow this style and length):**
+- They Left Their Dog in a Flood, But a Little Girl's Lawyer Dad Ensured They Couldn't Escape Justice.
+- Abandoned Dog Was Chained in a Wildfire, Until a 10-Year-Old Sued the Owners Who Left Him.
+- Rich Man Threw His Dog Out of a Limo, But a Girl's Dad Was the District Attorney Who Saw It.
+- Everyone Ignored the Crying Dog in a Hot Car, Until a Girl Called Her Lawyer Dad to Press Charges.
+
+**Script Excerpt:**
 """
 {script_text}
 """
 
 **Output:** Provide your response as a valid JSON array of 5 strings. Do not add any other text. Your response must be ONLY the raw JSON.`;
 
-export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube SEO and copywriter. I will provide you with a video title and the full script. Your task is to write a compelling, SEO-friendly YouTube video description.
+export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube SEO and copywriter for a channel called "Lily's Law". I will provide you with a video title and the full script. Your task is to write a compelling, SEO-friendly YouTube video description.
 
 **Video Title:** {title}
 **Script Text:**
@@ -319,11 +334,12 @@ export const GENERATE_DESCRIPTION_PROMPT_TEMPLATE = `You are an expert YouTube S
 
 **Instructions:**
 1.  **Hook:** Start with a 1-2 sentence hook that rephrases the title and grabs the reader's attention.
-2.  **Summary:** Write a 3-4 sentence paragraph that summarizes the main story arc of the video without giving away the final resolution. Create intrigue.
+2.  **Summary:** Write a 2-3 sentence paragraph that summarizes the main story arc of the video without giving away the final resolution. Create intrigue.
 3.  **Call to Action:** Include a call to subscribe to the channel and comment on the story.
-4.  **Keywords:** Do not include a list of keywords or hashtags.
+4.  **Hashtags:** End with a new line followed by 3 relevant, popular hashtags (e.g., #dogrescue #animalrescue #story).
+5.  **Keywords:** Do not include a separate list of keywords.
 
-**Output:** Provide only the description text.`;
+**Output:** Provide only the description text, formatted exactly as requested.`;
 
 export const GENERATE_TITLES_FROM_IDEA_PROMPT_TEMPLATE = `You are a world-class YouTube title strategist, renowned for your ability to transform a simple story idea into a list of 10 irresistible, viral-style video titles. You are working for the "Lily's Law" channel, which has a very specific and successful formula.
 
