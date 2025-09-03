@@ -1,10 +1,11 @@
-import { ScriptRecord, AutomationJob, FavoriteTitle } from '../types';
+import { ScriptRecord, AutomationJob, FavoriteTitle, PromptSection } from '../types';
 
 const SCRIPTS_KEY = 'aiScriptWriterPro_scripts';
 const QUEUE_KEY = 'aiScriptWriterPro_queue';
 const GEMINI_API_KEYS_KEY = 'aiScriptWriterPro_geminiApiKeys';
 const GROQ_API_KEYS_KEY = 'aiScriptWriterPro_groqApiKeys';
 const FAVORITE_TITLES_KEY = 'aiScriptWriterPro_favoriteTitles';
+const PROMPTS_KEY = 'aiScriptWriterPro_prompts';
 
 
 // === API Key Functions ===
@@ -171,5 +172,25 @@ export function saveFavoriteTitles(titles: FavoriteTitle[]): void {
         localStorage.setItem(FAVORITE_TITLES_KEY, JSON.stringify(titles));
     } catch (error) {
         console.error("Failed to save favorite titles to localStorage", error);
+    }
+}
+
+// === Prompt Library Functions ===
+
+export function getPromptSections(): PromptSection[] {
+    try {
+        const sectionsJson = localStorage.getItem(PROMPTS_KEY);
+        return sectionsJson ? JSON.parse(sectionsJson) : [];
+    } catch (error) {
+        console.error("Failed to load prompt sections from localStorage", error);
+        return [];
+    }
+}
+
+export function savePromptSections(sections: PromptSection[]): void {
+    try {
+        localStorage.setItem(PROMPTS_KEY, JSON.stringify(sections));
+    } catch (error) {
+        console.error("Failed to save prompt sections to localStorage", error);
     }
 }

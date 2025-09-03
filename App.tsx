@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import PasswordProtection from './components/PasswordProtection';
-import { ScissorsIcon, SparklesIcon, FileTextIcon, SettingsIcon, MenuIcon } from './components/Icons';
+import { ScissorsIcon, SparklesIcon, FileTextIcon, SettingsIcon, MenuIcon, ClipboardListIcon } from './components/Icons';
 import ScriptSplitter from './components/ScriptSplitter';
 import ScriptWriterView from './components/ScriptWriterView';
 import TitleStudio from './components/TitleStudio';
+import PromptsPage from './components/PromptsPage';
 import ApiManagerModal from './components/ApiManagerModal';
 import * as storage from './services/storageService';
 
-type View = 'home' | 'titles' | 'writer' | 'splitter';
+type View = 'home' | 'titles' | 'writer' | 'splitter' | 'prompts';
 
 // =================================================================================
 // Component: ViewSelector
@@ -19,7 +20,7 @@ const ViewSelector: React.FC<{ onSelectView: (view: View) => void; }> = ({ onSel
             <h1 className="text-4xl sm:text-5xl font-bold text-primary mb-2">AI Script Writer Pro</h1>
             <p className="text-lg text-on-surface-secondary">Choose your starting point.</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl">
             <button
                 onClick={() => onSelectView('titles')}
                 className="group bg-surface p-8 rounded-xl shadow-lg hover:shadow-primary/20 hover:scale-105 transition-all duration-300 border border-transparent hover:border-primary"
@@ -54,6 +55,18 @@ const ViewSelector: React.FC<{ onSelectView: (view: View) => void; }> = ({ onSel
                     </div>
                     <h2 className="text-2xl font-bold text-on-surface mb-2">Script Splitter</h2>
                     <p className="text-on-surface-secondary">Paste a long script to analyze its stats and split it into smaller, manageable sections.</p>
+                </div>
+            </button>
+            <button
+                onClick={() => onSelectView('prompts')}
+                className="group bg-surface p-8 rounded-xl shadow-lg hover:shadow-yellow-400/20 hover:scale-105 transition-all duration-300 border border-transparent hover:border-yellow-400"
+            >
+                <div className="flex flex-col items-center text-center">
+                     <div className="bg-yellow-400/20 p-4 rounded-full mb-4 text-yellow-400">
+                        <ClipboardListIcon />
+                    </div>
+                    <h2 className="text-2xl font-bold text-on-surface mb-2">Prompt Library</h2>
+                    <p className="text-on-surface-secondary">Organize, create, and manage your reusable prompts and templates in one place.</p>
                 </div>
             </button>
         </div>
@@ -190,6 +203,8 @@ const App: React.FC = () => {
                             geminiKeys={geminiKeys}
                             groqKeys={groqKeys}
                         />;
+            case 'prompts':
+                return <PromptsPage onBack={handleBackToHome} />;
             case 'home':
             default:
                 return <ViewSelector onSelectView={(view) => handleNavigate(view)} />;

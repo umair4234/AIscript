@@ -70,3 +70,15 @@ export interface FavoriteTitle {
     title: string;
     createdAt: string;
 }
+
+export interface Prompt {
+    id: string;
+    title: string;
+    text: string;
+}
+
+export interface PromptSection {
+    id: string;
+    name: string;
+    prompts: Prompt[];
+}
