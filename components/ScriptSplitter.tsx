@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { ArrowLeftIcon, CheckIcon, CopyIcon, SparklesIcon } from './Icons';
 import { AIManager } from '../services/aiService';
 import { getTitlesFromScriptPrompt, getDescriptionPrompt, getTitlesFromExistingTitlePrompt } from '../services/promptService';
+import * as storage from '../services/storageService';
 import TitleGenerationModal from './TitleGenerationModal';
 
 interface ScriptSplitterProps {
@@ -50,7 +51,7 @@ const ScriptStats: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialSections, onSplit, onBack, googleGenAI, geminiKeys, groqKeys }) => {
-    const [script, setScript] = useState(initialScript);
+    const [script, setScript] = useState(initialScript || storage.getSplitterScript() || '');
     const [maxChars, setMaxChars] = useState(10000);
     const [keyword, setKeyword] = useState('');
     const [sections, setSections] = useState<string[]>(initialSections || []);
@@ -76,17 +77,31 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
 
 
     useEffect(() => {
-      setScript(initialScript);
+      // Prioritize script passed from writer, otherwise use component's state
+      if (initialScript) {
+        setScript(initialScript);
+      }
     }, [initialScript]);
     
     useEffect(() => {
       setSections(initialSections || []);
     }, [initialSections]);
 
+    useEffect(() => {
+        // Save script to local storage on change with a debounce
+        const handler = setTimeout(() => {
+            storage.saveSplitterScript(script);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [script]);
+
     // Memos for Script Cleaner
     const chapterHeadingsCount = useMemo(() => {
         if (!script) return 0;
-        const matches = script.match(/^Chapter \d+\s*$/gim);
+        const matches = script.match(/^Chapter \d+.*$/gim);
         return matches ? matches.length : 0;
     }, [script]);
     
@@ -97,7 +112,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
 
     // Handlers for Script Cleaner feature
     const handleRemoveChapterHeadings = () => {
-        const cleanedScript = script.replace(/^(Chapter \d+\s*)\n?/gim, '');
+        const cleanedScript = script.replace(/^Chapter \d+.*\n?/gim, '');
         setScript(cleanedScript);
     };
     
@@ -289,7 +304,7 @@ const ScriptSplitter: React.FC<ScriptSplitterProps> = ({ initialScript, initialS
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="font-semibold">Chapter Headings</p>
-                                    <p className="text-sm text-on-surface-secondary">e.g., "Chapter 1"</p>
+                                    <p className="text-sm text-on-surface-secondary">e.g., "Chapter 1: The Discovery"</p>
                                 </div>
                                 {chapterHeadingsCount > 0 ? (
                                     <div className="flex items-center gap-2">

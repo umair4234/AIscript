@@ -6,6 +6,7 @@ const GEMINI_API_KEYS_KEY = 'aiScriptWriterPro_geminiApiKeys';
 const GROQ_API_KEYS_KEY = 'aiScriptWriterPro_groqApiKeys';
 const FAVORITE_TITLES_KEY = 'aiScriptWriterPro_favoriteTitles';
 const PROMPTS_KEY = 'aiScriptWriterPro_prompts';
+const SPLITTER_SCRIPT_KEY = 'aiScriptWriterPro_splitterScript';
 
 
 // === API Key Functions ===
@@ -192,5 +193,24 @@ export function savePromptSections(sections: PromptSection[]): void {
         localStorage.setItem(PROMPTS_KEY, JSON.stringify(sections));
     } catch (error) {
         console.error("Failed to save prompt sections to localStorage", error);
+    }
+}
+
+// === Script Splitter Functions ===
+
+export function getSplitterScript(): string {
+    try {
+        return localStorage.getItem(SPLITTER_SCRIPT_KEY) || '';
+    } catch (error) {
+        console.error("Failed to load splitter script from localStorage", error);
+        return '';
+    }
+}
+
+export function saveSplitterScript(script: string): void {
+    try {
+        localStorage.setItem(SPLITTER_SCRIPT_KEY, script);
+    } catch (error) {
+        console.error("Failed to save splitter script to localStorage", error);
     }
 }
